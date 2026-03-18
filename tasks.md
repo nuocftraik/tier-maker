@@ -178,30 +178,31 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 ## Phase 7: Polish & Deploy
 **Estimated: 2-3 giờ**
 
-- [ ] **7.1** Internationalization (i18n)
+- [x] **7.1** Internationalization (i18n)
   - Extract all text strings
   - Vietnamese translations
   - English translations
   - Language toggle persistence
-- [ ] **7.2** Final responsive testing
+- [x] **7.2** Final responsive testing
   - Mobile (375px, 390px, 414px)
   - Tablet (768px)
   - Desktop (1024px, 1440px)
-- [ ] **7.3** Dark mode polish
+- [x] **7.3** Dark mode polish
   - Verify all components in both themes
   - Smooth transition animation
-- [ ] **7.4** Performance optimization
+- [x] **7.4** Performance optimization
   - Image optimization (Next.js Image)
   - SWR caching configuration
   - Debounce API calls
-- [ ] **7.5** Deploy to Vercel
+- [x] **7.5** Deploy to Vercel
   - Push to GitHub
   - Connect to Vercel
   - Configure environment variables
   - Verify deployment
-- [ ] **7.6** Upload avatars to Supabase Storage
-- [ ] **7.7** Seed production data
-- [ ] **7.8** Final testing on production URL
+- [x] **7.6** Upload avatars to Supabase Storage
+- [x] **7.7** Seed production data
+- [x] **7.8** Final testing on production URL
+
 
 ---
 

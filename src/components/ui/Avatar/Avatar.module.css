@@ -5,6 +5,7 @@
   justify-content: center;
   border: 2px solid var(--border-color);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 /* Shapes */
@@ -49,8 +50,23 @@
 
 /* S Tier Effects Placeholder */
 .fireEffect {
-  animation: fire-border 2s infinite alternate;
-  border: 2px solid transparent; 
+  animation: fire-border 2s ease-in-out infinite alternate;
+  border: 2px solid #ff3b30; 
+}
+
+@keyframes fire-border {
+  0% {
+    box-shadow: 0 0 10px #ff3b30, inset 0 0 5px #ff3b30;
+    border-color: #ff3b30;
+  }
+  50% {
+    box-shadow: 0 0 20px #ff9500, inset 0 0 10px #ff9500;
+    border-color: #ff9500;
+  }
+  100% {
+    box-shadow: 0 0 15px #ff3b30, inset 0 0 8px #ff3b30;
+    border-color: #ff3b30;
+  }
 }
 
 .sparkleEffect {

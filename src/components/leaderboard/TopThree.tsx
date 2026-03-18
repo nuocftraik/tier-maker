@@ -1,8 +1,10 @@
 import React from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { Crown } from 'lucide-react';
+import { Fireworks } from './Fireworks';
 import styles from './TopThree.module.css';
 
 interface TopThreeProps {
@@ -40,22 +42,24 @@ export const TopThree: React.FC<TopThreeProps> = ({ topPlayers, sTierSettings })
               transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
               className={`${styles.podiumItem} ${placeClass}`}
             >
-              <div className={styles.avatarWrapper}>
-                {showCrown && <Crown className={styles.crownIcon} size={32} strokeWidth={2.5} />}
-                <Avatar
-                  src={player.avatar_url}
-                  alt={player.name}
-                  size={isFirst ? 'xl' : 'lg'}
-                  tierEffects={player.tier === 'S' && sTierSettings.tier_s_fire_effect ? 'fire' : 'none'}
-                />
-              </div>
-              
-              <div className={styles.info}>
-                <span className={styles.name}>{player.name}</span>
-                <Badge tier={player.tier} size="sm" className={styles.badge} />
-                <span className={styles.score}>{player.avg_score} <span className={styles.scoreLabel}>điểm</span></span>
-                <span className={styles.votes}>{player.total_votes} votes</span>
-              </div>
+              <Link href={`/profile/${player.user_id}`} className={styles.profileLink}>
+                <div className={styles.avatarWrapper}>
+                  {showCrown && <Crown className={styles.crownIcon} size={32} strokeWidth={2.5} />}
+                  <Avatar
+                    src={player.avatar_url}
+                    alt={player.name}
+                    size={isFirst ? 'xl' : 'lg'}
+                    tierEffects={player.tier === 'S' && sTierSettings.tier_s_fire_effect === 'true' ? 'fire' : 'none'}
+                  />
+                </div>
+                
+                <div className={styles.info}>
+                  <span className={styles.name}>{player.name}</span>
+                  <Badge tier={player.tier} size="sm" className={styles.badge} />
+                  <span className={styles.score}>{player.avg_score} <span className={styles.scoreLabel}>điểm</span></span>
+                  <span className={styles.votes}>{player.total_votes} votes</span>
+                </div>
+              </Link>
               
               <div className={`${styles.pedestal} ${styles[`pedestal-${placeClass}`]}`}>
                 {isFirst ? '1st' : index === 0 ? '2nd' : '3rd'}

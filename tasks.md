@@ -149,29 +149,29 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 ## Phase 6: Admin Panel
 **Estimated: 2-3 giờ**
 
-- [ ] **6.1** Implement Admin API routes
+- [x] **6.1** Implement Admin API routes
   - `PUT /api/admin/settings`
   - `PUT /api/admin/users/:id/role`
   - `POST /api/users` (admin only)
   - `PUT /api/users/:id` (admin only)
   - `DELETE /api/users/:id` (admin only)
-- [ ] **6.2** Create Admin Dashboard
+- [x] **6.2** Create Admin Dashboard
   - Quick stats overview
   - Member count, total votes, etc.
-- [ ] **6.3** Create Member Management page
+- [x] **6.3** Create Member Management page
   - Member list with actions (edit, delete)
   - Add new member form (name + avatar upload)
   - Edit member form
   - Delete confirmation
-- [ ] **6.4** Create Settings page
+- [x] **6.4** Create Settings page
   - Change access code
   - Change admin password
   - Toggle S-tier effects (fire, sparkle, crown)
   - (Future: tier thresholds)
-- [ ] **6.5** Create Admin Permission management
+- [x] **6.5** Create Admin Permission management
   - Grant/revoke admin role
   - Prevent removing last admin
-- [ ] **6.6** Admin route protection
+- [x] **6.6** Admin route protection
 
 ---
 

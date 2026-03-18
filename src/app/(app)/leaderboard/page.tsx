@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
+import { useWindowSize } from 'react-use';
+import Confetti from 'react-confetti';
 import { TopThree } from '@/components/leaderboard/TopThree';
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable';
 import { Button } from '@/components/ui/Button/Button';
@@ -19,6 +21,23 @@ const TIERS = ['All', 'S', 'A', 'B', 'C', 'D', 'E', 'F', 'Bot', 'Unranked'];
 
 export default function LeaderboardPage() {
   const [filter, setFilter] = useState('All');
+  const [showConfetti, setShowConfetti] = useState(true);
+  const [recycle, setRecycle] = useState(true); // Control flow of new pieces
+  const [isMounted, setIsMounted] = useState(false);
+  const { width, height } = useWindowSize();
+
+  useEffect(() => {
+    setIsMounted(true);
+    // Generate new pieces continuously for 3 seconds then gracefully wind down
+    const stopRecycleTimer = setTimeout(() => setRecycle(false), 3000);
+    // Unmount completely after 6 seconds to free up browser memory
+    const unmountTimer = setTimeout(() => setShowConfetti(false), 6000);
+    
+    return () => {
+      clearTimeout(stopRecycleTimer);
+      clearTimeout(unmountTimer);
+    };
+  }, []);
   
   // Real-time could be added here by listening to Supabase changes, 
   // but SWR handles aggressive revalidation which is good enough for MVP.
@@ -34,6 +53,18 @@ export default function LeaderboardPage() {
 
   return (
     <div className={styles.container}>
+      {isMounted && showConfetti && filter === 'All' && (
+        <Confetti 
+          width={width} 
+          height={height} 
+          recycle={recycle} 
+          numberOfPieces={600}
+          gravity={0.12} // Softer gravity
+          initialVelocityY={20} // Explosive upward burst
+          style={{ zIndex: 1000, position: 'fixed' }} 
+        />
+      )}
+
       <header className={styles.header}>
         <div className={styles.titleWrapper}>
           <Trophy className={styles.trophyIcon} size={32} />

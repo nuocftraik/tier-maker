@@ -1,0 +1,64 @@
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+/* Shapes */
+.shape-circle {
+  border-radius: var(--radius-full);
+}
+.shape-square {
+  border-radius: 4px;
+}
+
+/* Sizes */
+.size-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+.size-md {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+}
+.size-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 1.25rem;
+}
+.size-xl {
+  width: 96px;
+  height: 96px;
+  font-size: 2rem;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.fallback {
+  color: var(--text-secondary);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* S Tier Effects Placeholder */
+.fireEffect {
+  animation: fire-border 2s infinite alternate;
+  border: 2px solid transparent; 
+}
+
+.sparkleEffect {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #fff 10%, transparent 20%);
+  background-size: 4px 4px;
+  opacity: 0.3;
+  animation: float 2s infinite ease-in-out;
+}

@@ -1,0 +1,65 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  touch-action: none;
+  z-index: 10;
+}
+
+.dragging {
+  opacity: 0.8;
+  z-index: 100;
+  transform: scale(1.05); /* Managed partly by inline style CSS translation, so careful here */
+  box-shadow: var(--shadow-xl);
+}
+
+.dragHandle {
+  cursor: grab;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.1s;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.dragHandle:hover {
+  filter: brightness(1.1);
+}
+
+.avatarImage {
+  border: none !important; /* Remove avatar border for cleaner look */
+}
+
+/* Text overlay mimicking TierMaker */
+.nameOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scoreBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--color-primary);
+  color: white;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.25rem;
+  border-bottom-left-radius: 4px;
+}

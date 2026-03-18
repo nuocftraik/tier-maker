@@ -1,0 +1,102 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.sTierCard {
+  border-color: rgba(255, 215, 0, 0.4);
+  background-image: radial-gradient(circle at right top, rgba(255, 215, 0, 0.1), transparent 400px);
+}
+
+.avatarSection {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.crownIcon {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--tier-s-gold);
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.4));
+  animation: float 3s ease-in-out infinite;
+  z-index: 20;
+}
+
+.avatarMain {
+  border-width: 4px;
+  box-shadow: var(--shadow-lg);
+}
+
+.infoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.metrics {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.metricValue {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.scoreColor {
+  color: var(--color-primary);
+}
+
+@media (max-width: 640px) {
+  .card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+  
+  .metrics {
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  .name {
+    font-size: 1.5rem;
+  }
+}

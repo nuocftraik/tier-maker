@@ -1,0 +1,60 @@
+.row {
+  display: flex;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
+  min-height: 80px;
+}
+
+.rowOver {
+  border-color: var(--color-primary);
+  background-color: var(--bg-hover);
+}
+
+.labelArea {
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border-color);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.labelText {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Tier Specific Colors */
+.label-s { background-color: var(--tier-s); }
+.label-a { background-color: var(--tier-a); }
+.label-b { background-color: var(--tier-b); }
+.label-c { background-color: var(--tier-c); }
+.label-d { background-color: var(--tier-d); }
+.label-e { background-color: var(--tier-e); }
+.label-f { background-color: var(--tier-f); }
+.label-bot { background-color: var(--tier-bot); }
+
+.dropZone {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  align-items: center;
+}
+
+.placeholder {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}

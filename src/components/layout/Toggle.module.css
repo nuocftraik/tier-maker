@@ -1,0 +1,16 @@
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  background-color: var(--bg-hover);
+}
+
+.toggleBtn:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}

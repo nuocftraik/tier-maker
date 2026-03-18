@@ -1,0 +1,38 @@
+.container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  min-height: 120px;
+  padding: 1rem;
+  background-color: var(--bg-hover);
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-color);
+  transition: all 0.2s;
+}
+
+.poolOver {
+  border-color: var(--color-primary);
+  background-color: rgba(41, 121, 255, 0.05); /* very light blue */
+}

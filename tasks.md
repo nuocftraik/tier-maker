@@ -36,113 +36,113 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 ## Phase 2: Authentication & Layout
 **Estimated: 2-3 giờ**
 
-- [ ] **2.1** Create Login page
+- [x] **2.1** Create Login page
   - Access code input field
   - Member selection grid (avatars + names)
   - Admin login button
   - Responsive layout
-- [ ] **2.2** Create Admin Login flow
+- [x] **2.2** Create Admin Login flow
   - Select name + enter admin password
   - Validate against is_admin flag
-- [ ] **2.3** Implement auth API routes
+- [x] **2.3** Implement auth API routes
   - `POST /api/auth/login`
   - `POST /api/auth/admin-login`
   - JWT token management
-- [ ] **2.4** Create app layout
+- [x] **2.4** Create app layout
   - Navbar with navigation links
   - Theme toggle (dark/light)
   - Language toggle (Vi/En)
   - User avatar + logout
-- [ ] **2.5** Implement auth middleware (protect routes)
-- [ ] **2.6** Create base UI components (Button, Input, Card, Avatar, Badge)
+- [x] **2.5** Implement auth middleware (protect routes)
+- [x] **2.6** Create base UI components (Button, Input, Card, Avatar, Badge)
 
 ---
 
 ## Phase 3: Leaderboard (Main Page)
 **Estimated: 3-4 giờ**
 
-- [ ] **3.1** Implement `GET /api/leaderboard` API
-- [ ] **3.2** Create LeaderboardTable component
+- [x] **3.1** Implement `GET /api/leaderboard` API
+- [x] **3.2** Create LeaderboardTable component
   - Gaming/esports style design
   - Rank, Avatar, Name, Score, Tier badge
   - Blue + White brand colors
-- [ ] **3.3** Create TierBadge component
+- [x] **3.3** Create TierBadge component
   - 8 tiers with unique colors
   - Styled badges with tier label
-- [ ] **3.4** Create TopThree component
+- [x] **3.4** Create TopThree component
   - Special display for top 3 players
   - Larger cards, podium style
-- [ ] **3.5** Implement S-tier special effects
+- [x] **3.5** Implement S-tier special effects
   - Fire border animation (CSS)
   - Sparkle particle effect
   - Crown icon overlay
   - Toggle controls (admin settings)
-- [ ] **3.6** Implement Bot tier special styling (🤖 icon)
-- [ ] **3.7** Add Framer Motion animations
+- [x] **3.6** Implement Bot tier special styling (🤖 icon)
+- [x] **3.7** Add Framer Motion animations
   - Rank change slide animations
   - Score counter animations
   - Staggered entry animations
-- [ ] **3.8** Add tier filter functionality
-- [ ] **3.9** Responsive design (mobile + desktop)
-- [ ] **3.10** Dark mode styling
+- [x] **3.8** Add tier filter functionality
+- [x] **3.9** Responsive design (mobile + desktop)
+- [x] **3.10** Dark mode styling
 
 ---
 
 ## Phase 4: Voting System
 **Estimated: 4-5 giờ**
 
-- [ ] **4.1** Implement Vote API routes
+- [x] **4.1** Implement Vote API routes
   - `POST /api/votes` (upsert)
   - `GET /api/votes?targetUserId=:id`
   - `GET /api/votes/my-votes`
   - `DELETE /api/votes/:id`
-- [ ] **4.2** Create Click & Score voting
+- [x] **4.2** Create Click & Score voting
   - Member grid/list
   - Click to open score input
   - Score slider or number input (1-10)
   - Submit button
-- [ ] **4.3** Create TierMaker Drag & Drop board
+- [x] **4.3** Create TierMaker Drag & Drop board
   - Tier rows (S through Bot) as drop zones
   - MemberPool (unassigned members)
   - Draggable TierCards with avatars
   - @dnd-kit integration
-- [ ] **4.4** Implement inline score editing
+- [x] **4.4** Implement inline score editing
   - Score input appears on card after drop
   - Default score based on tier midpoint
   - Editable without popup
   - Auto-save on blur/enter (debounced)
-- [ ] **4.5** Pre-populate board with user's existing votes
-- [ ] **4.6** Add drag & drop animations
+- [x] **4.5** Pre-populate board with user's existing votes
+- [x] **4.6** Add drag & drop animations
   - Drag start: scale up, shadow
   - Dragging: semi-transparent, cursor follow
   - Drop: smooth transition
   - Drop zone hover: highlight
-- [ ] **4.7** Real-time ranking update after vote
-- [ ] **4.8** Validation (no self-vote, score range)
-- [ ] **4.9** Responsive design for vote page
+- [x] **4.7** Real-time ranking update after vote
+- [x] **4.8** Validation (no self-vote, score range)
+- [x] **4.9** Responsive design for vote page
 
 ---
 
 ## Phase 5: Profile & Vote History
 **Estimated: 2-3 giờ**
 
-- [ ] **5.1** Implement Profile API
+- [x] **5.1** Implement Profile API
   - `GET /api/users/:id/profile`
   - Return user info + received votes + stats
-- [ ] **5.2** Create ProfileCard component
+- [x] **5.2** Create ProfileCard component
   - Avatar (large), name, current tier, score
   - Tier badge with effects (if S)
-- [ ] **5.3** Create VoteHistory component
+- [x] **5.3** Create VoteHistory component
   - Table/list of received votes
   - Voter name, score, date
   - Sort by date or score
-- [ ] **5.4** Create StatsCard component
+- [x] **5.4** Create StatsCard component
   - Total votes received
   - Average score
   - Highest/lowest vote
   - Current rank position
-- [ ] **5.5** Responsive design
-- [ ] **5.6** Dark mode styling
+- [x] **5.5** Responsive design
+- [x] **5.6** Dark mode styling
 
 ---
 

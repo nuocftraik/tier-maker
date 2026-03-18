@@ -1,0 +1,39 @@
+:root {
+  /* Brand Colors */
+  --color-primary: #2979FF;
+  --color-primary-light: #82B1FF;
+  --color-primary-dark: #1565C0;
+  --color-on-primary: #FFFFFF;
+
+  /* Tier Colors */
+  --tier-s: #FF1744;
+  --tier-s-gold: #FFD700;
+  --tier-a: #FF6D00;
+  --tier-b: #FFD600;
+  --tier-c: #00C853;
+  --tier-d: #2979FF;
+  --tier-e: #AA00FF;
+  --tier-f: #78909C;
+  --tier-bot: #37474F;
+  --tier-unranked: #546E7A;
+
+  /* Light Theme Specifics */
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F1F5F9;
+  
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+
+  --border-color: #E2E8F0;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+}

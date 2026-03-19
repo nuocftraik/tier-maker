@@ -26,12 +26,12 @@ export const TopThree: React.FC<TopThreeProps> = ({ topPlayers, sTierSettings })
 
           const isFirst = index === 1; // Center is 1st place in the array
           const placeClass = isFirst ? styles.firstPlace : index === 0 ? styles.secondPlace : styles.thirdPlace;
-          const showCrown = isFirst && player.tier === 'S' && sTierSettings.tier_s_crown_effect !== false;
+          const showCrown = isFirst && sTierSettings.tier_s_crown_effect;
           
           let avatarEffects: 'none' | 'fire' | 'sparkle' = 'none';
           if (player.tier === 'S') {
             if (sTierSettings.tier_s_fire_effect) avatarEffects = 'fire';
-            if (sTierSettings.tier_s_sparkle_effect) avatarEffects = 'sparkle'; // Simplified, only uses one class at a time for CSS Avatar, but Avatar can be extended
+            else if (sTierSettings.tier_s_sparkle_effect) avatarEffects = 'sparkle';
           }
 
           return (
@@ -49,7 +49,7 @@ export const TopThree: React.FC<TopThreeProps> = ({ topPlayers, sTierSettings })
                     src={player.avatar_url}
                     alt={player.name}
                     size={isFirst ? 'xl' : 'lg'}
-                    tierEffects={player.tier === 'S' && sTierSettings.tier_s_fire_effect === 'true' ? 'fire' : 'none'}
+                    tierEffects={avatarEffects}
                   />
                 </div>
                 

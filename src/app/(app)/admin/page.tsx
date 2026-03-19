@@ -148,7 +148,7 @@ const MembersTab = () => {
               <tr key={u.id}>
                 <td><Avatar src={u.avatar_url} alt={u.name} size="sm" /></td>
                 <td>{u.name}</td>
-                <td>{u.is_admin ? <Badge tier="S" size="sm" /> : <Badge tier="Unranked" size="sm" />}</td>
+                <td>{u.is_admin ? <Badge tier="S" size="sm">Admin</Badge> : <Badge tier="Unranked" size="sm">Thành viên</Badge>}</td>
                 <td>
                   <div className={styles.actionBtns}>
                     <button onClick={() => { setEditingUser(u); setIsAdding(false); setFormData(u); }} className={styles.iconBtn}><Edit2 size={16}/></button>

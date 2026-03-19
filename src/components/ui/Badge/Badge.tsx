@@ -5,12 +5,14 @@ type TierType = 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'Bot' | 'Unranked';
 
 interface BadgeProps {
   tier: TierType;
+  children?: React.ReactNode;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
 
 export const Badge: React.FC<BadgeProps> = ({
   tier,
+  children,
   className = '',
   size = 'md',
 }) => {
@@ -27,7 +29,7 @@ export const Badge: React.FC<BadgeProps> = ({
         ${className}
       `}
     >
-      {displayTier}
+      {children || displayTier}
     </span>
   );
 };

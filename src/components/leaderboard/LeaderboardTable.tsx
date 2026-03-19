@@ -45,7 +45,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             
             // Effect Checks
             const hasFire = isSTier && sTierSettings.tier_s_fire_effect;
-            const hasCrown = isSTier && sTierSettings.tier_s_crown_effect;
+            const hasCrown = player.rank === 1 && sTierSettings.tier_s_crown_effect;
 
             return (
               <motion.div

@@ -6,7 +6,7 @@
   margin-bottom: 0.5rem;
   overflow: hidden;
   transition: border-color 0.2s, background-color 0.2s;
-  min-height: 80px;
+  min-height: 108px;
 }
 
 .rowOver {
@@ -15,7 +15,7 @@
 }
 
 .labelArea {
-  width: 80px;
+  width: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,8 +45,8 @@
   flex: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0.25rem;
+  gap: 4px;
+  padding: 4px;
   align-items: center;
 }
 

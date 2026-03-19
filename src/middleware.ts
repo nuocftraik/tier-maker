@@ -12,27 +12,32 @@ export default async function middleware(req: NextRequest) {
   const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
   const isAuthRoute = authRoutes.includes(path);
 
-  // Check valid session
   const cookie = req.cookies.get('session');
-  // Root page is leaderboard, accessible to auth users. We could also protect it, but PRD says "A member opens the app -> enters code", so "/" could just redirect to "/login" if not authed.
   const isRoot = path === '/';
 
-  if (!cookie?.value) {
-    if (isProtectedRoute || isAdminRoute || isRoot) {
-      return NextResponse.redirect(new URL('/login', req.nextUrl));
+  // Decode session
+  const session = cookie?.value ? await decrypt(cookie.value) : null;
+  const isPrefetch = req.headers.get('x-middleware-prefetch') === '1';
+
+  // If no session and trying to access protected route
+  if (!session && (isProtectedRoute || isAdminRoute || isRoot)) {
+    // If it's a prefetch, we could ignore it to avoid flickering, but redirecting is usually OK
+    // Importantly, we ONLY delete the session if we are absolutely sure the cookie is present but invalid.
+    const loginUrl = new URL('/login', req.nextUrl);
+    // loginUrl.searchParams.set('from', path); // Useful for redirection after login
+    
+    if (isPrefetch) {
+      // For prefetch requests, we return a response that allows the prefetch to work but 
+      // let the actual navigation handle the redirect if still unauthorized.
+      return NextResponse.next();
     }
-    return NextResponse.next();
-  }
-
-  const session = await decrypt(cookie.value);
-
-  // Invalid or expired token
-  if (!session) {
-    if (isProtectedRoute || isAdminRoute || isRoot) {
-      const resp = NextResponse.redirect(new URL('/login', req.nextUrl));
+    
+    const resp = NextResponse.redirect(loginUrl);
+    if (cookie?.value) {
+      // Only delete if there was a cookie that failed to decrypt
       resp.cookies.delete('session');
-      return resp;
     }
+    return resp;
   }
 
   // Valid session logic

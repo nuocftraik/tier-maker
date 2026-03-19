@@ -53,6 +53,11 @@
 }
 .btnSave:hover { filter: brightness(1.1); }
 
+.btnUnvote {
+  background-color: var(--tier-e); /* Purple/Special */
+}
+.btnUnvote:hover { filter: brightness(1.1); }
+
 .btnCancel {
   background-color: var(--tier-s); /* Red */
 }

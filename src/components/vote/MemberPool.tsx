@@ -6,9 +6,10 @@ import styles from './MemberPool.module.css';
 interface MemberPoolProps {
   unassignedUsers: any[];
   onScoreSave: (userId: string, newScore: number) => void;
+  onUnvote: (userId: string) => void;
 }
 
-export const MemberPool: React.FC<MemberPoolProps> = ({ unassignedUsers, onScoreSave }) => {
+export const MemberPool: React.FC<MemberPoolProps> = ({ unassignedUsers, onScoreSave, onUnvote }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: 'unassigned-pool',
     data: { tier: 'unassigned' },
@@ -28,6 +29,7 @@ export const MemberPool: React.FC<MemberPoolProps> = ({ unassignedUsers, onScore
             key={user.id} 
             user={user} 
             onScoreSave={onScoreSave} 
+            onUnvote={onUnvote}
           />
         ))}
       </div>

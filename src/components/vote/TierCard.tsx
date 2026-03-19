@@ -3,15 +3,17 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { ScoreInput } from './ScoreInput';
+import { X } from 'lucide-react';
 import styles from './TierCard.module.css';
 
 interface TierCardProps {
   user: any;
   currentVote?: any; // The vote given by the current session user
   onScoreSave: (userId: string, newScore: number) => void;
+  onUnvote: (userId: string) => void;
 }
 
-export const TierCard: React.FC<TierCardProps> = ({ user, currentVote, onScoreSave }) => {
+export const TierCard: React.FC<TierCardProps> = ({ user, currentVote, onScoreSave, onUnvote }) => {
   const [isEditing, setIsEditing] = useState(false);
   
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -37,6 +39,11 @@ export const TierCard: React.FC<TierCardProps> = ({ user, currentVote, onScoreSa
     setIsEditing(false);
   };
 
+  const handleUnvoteClick = () => {
+    onUnvote(user.id);
+    setIsEditing(false);
+  };
+
   return (
     <div 
       ref={setNodeRef} 
@@ -49,13 +56,23 @@ export const TierCard: React.FC<TierCardProps> = ({ user, currentVote, onScoreSa
         {...attributes}
         onClick={handleClick}
       >
-        <Avatar src={user.avatar_url} alt={user.name} size="lg" shape="square" className={styles.avatarImage} />
+        <Avatar src={user.avatar_url} alt={user.name} size="xl" shape="square" className={styles.avatarImage} />
         <div className={styles.nameOverlay}>{user.name}</div>
         
         {score !== null && (
           <div className={styles.scoreBadge}>{score.toFixed(1)}</div>
         )}
       </div>
+
+      {score !== null && !isDragging && (
+        <button 
+          className={styles.unvoteBtn} 
+          onClick={(e) => { e.stopPropagation(); onUnvote(user.id); }}
+          title="Xóa vote"
+        >
+          <X size={10} strokeWidth={4} />
+        </button>
+      )}
 
       {isEditing && (
         <ScoreInput

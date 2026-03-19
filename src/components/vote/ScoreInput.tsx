@@ -45,8 +45,20 @@ export const ScoreInput: React.FC<ScoreInputProps> = ({ initialScore, onSave, on
         className={styles.input}
       />
       <div className={styles.actions}>
-        <button className={`${styles.btn} ${styles.btnSave}`} onClick={handleSave}><Check size={14} /></button>
-        <button className={`${styles.btn} ${styles.btnCancel}`} onClick={onCancel}><X size={14} /></button>
+        <button 
+          className={`${styles.btn} ${styles.btnSave}`} 
+          onClick={handleSave}
+          title="Lưu điểm"
+        >
+          <Check size={14} />
+        </button>
+        <button 
+          className={`${styles.btn} ${styles.btnCancel}`} 
+          onClick={onCancel}
+          title="Hủy"
+        >
+          <X size={14} />
+        </button>
       </div>
     </div>
   );

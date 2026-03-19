@@ -9,9 +9,10 @@ interface TierRowProps {
   users: any[];
   votes: Record<string, any>;
   onScoreSave: (userId: string, newScore: number) => void;
+  onUnvote: (userId: string) => void;
 }
 
-export const TierRow: React.FC<TierRowProps> = ({ tier, users, votes, onScoreSave }) => {
+export const TierRow: React.FC<TierRowProps> = ({ tier, users, votes, onScoreSave, onUnvote }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: `tier-${tier}`,
     data: { tier },
@@ -33,6 +34,7 @@ export const TierRow: React.FC<TierRowProps> = ({ tier, users, votes, onScoreSav
             user={user} 
             currentVote={votes[user.id]} 
             onScoreSave={onScoreSave} 
+            onUnvote={onUnvote}
           />
         ))}
         {users.length === 0 && (

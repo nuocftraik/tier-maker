@@ -105,12 +105,56 @@ export const VoteBoard = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newVote),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Lỗi lưu dữ liệu');
+      
+      const contentType = res.headers.get('content-type');
+      if (!res.ok) {
+        let errorMsg = 'Lỗi lưu dữ liệu';
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } else {
+          errorMsg = `Lỗi từ máy chủ (${res.status})`;
+        }
+        throw new Error(errorMsg);
+      }
+      
       mutateVotes(); // Revalidate from server
     } catch (err: any) {
       mutateVotes(previousVotes, false); // Revert on failure
       alert(err.message || 'Lỗi lưu điểm. Vui lòng thử lại.');
+    }
+  };
+
+  const handleUnvote = async (userId: string) => {
+    // Optimistic UI update
+    const previousVotes = [...votes];
+    const updatedVotes = previousVotes.filter(v => v.target_user_id !== userId);
+    mutateVotes(updatedVotes, false);
+
+    try {
+      const voteToDelete = votesMap[userId];
+      if (!voteToDelete) return;
+
+      const res = await fetch(`/api/votes/${voteToDelete.id}`, {
+        method: 'DELETE',
+      });
+      
+      const contentType = res.headers.get('content-type');
+      if (!res.ok) {
+        let errorMsg = 'Lỗi unvote';
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } else {
+          errorMsg = `Lỗi từ máy chủ (${res.status})`;
+        }
+        throw new Error(errorMsg);
+      }
+      
+      mutateVotes();
+    } catch (err: any) {
+      mutateVotes(previousVotes, false);
+      alert(err.message || 'Lỗi khi unvote. Vui lòng thử lại.');
     }
   };
 
@@ -163,6 +207,7 @@ export const VoteBoard = () => {
                 users={usersInTier} 
                 votes={votesMap}
                 onScoreSave={handleScoreSave}
+                onUnvote={handleUnvote}
               />
             );
           })}
@@ -171,6 +216,7 @@ export const VoteBoard = () => {
         <MemberPool 
           unassignedUsers={unassignedUsers} 
           onScoreSave={handleScoreSave}
+          onUnvote={handleUnvote}
         />
       </div>
 
@@ -180,6 +226,7 @@ export const VoteBoard = () => {
             user={activeUser} 
             currentVote={votesMap[activeUser.id]} 
             onScoreSave={() => {}} 
+            onUnvote={() => {}}
           />
         ) : null}
       </DragOverlay>

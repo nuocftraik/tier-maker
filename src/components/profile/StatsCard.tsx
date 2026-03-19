@@ -5,9 +5,10 @@ import styles from './StatsCard.module.css';
 
 interface StatsCardProps {
   profile: any;
+  matchStats?: { total: number; wins: number; losses: number; winRate: number };
 }
 
-export const StatsCard: React.FC<StatsCardProps> = ({ profile }) => {
+export const StatsCard: React.FC<StatsCardProps> = ({ profile, matchStats }) => {
   const votes = profile.votesHistory || [];
   const validScores = votes.map((v: any) => v.score);
   
@@ -43,6 +44,25 @@ export const StatsCard: React.FC<StatsCardProps> = ({ profile }) => {
             <span className={styles.statValue}>{lowestScore}</span>
           </div>
         </div>
+
+        {matchStats && (
+          <>
+            <div className={styles.statBox}>
+              <div className={styles.iconWrapper}><Activity size={20} className={styles.iconPrimary} /></div>
+              <div className={styles.statContent}>
+                <span className={styles.statLabel}>Trận đã đấu</span>
+                <span className={styles.statValue}>{matchStats.total}</span>
+              </div>
+            </div>
+            <div className={styles.statBox}>
+              <div className={styles.iconWrapper}><TrendingUp size={20} className={styles.iconSuccess} /></div>
+              <div className={styles.statContent}>
+                <span className={styles.statLabel}>Tỉ lệ thắng</span>
+                <span className={styles.statValue}>{matchStats.winRate}%</span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </Card>
   );

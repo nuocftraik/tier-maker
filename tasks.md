@@ -208,28 +208,46 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 
 ## Deploy Checklist
 
-- [ ] Supabase project created
-- [ ] Database tables and views created
-- [ ] Avatars uploaded to Supabase Storage
-- [ ] Initial member data seeded
-- [ ] Default settings configured
-- [ ] GitHub repo created and pushed
-- [ ] Vercel project connected
-- [ ] Environment variables set in Vercel
-- [ ] Production URL working
-- [ ] Mobile responsive verified
-- [ ] Dark mode verified
-- [ ] Admin panel tested
-- [ ] Voting flow tested end-to-end
+- [x] Supabase project created
+- [x] Database tables and views created
+- [x] Avatars uploaded to Supabase Storage
+- [x] Initial member data seeded
+- [x] Default settings configured
+- [x] GitHub repo created and pushed
+- [x] Vercel project connected
+- [x] Environment variables set in Vercel
+- [x] Production URL working
+- [x] Mobile responsive verified
+- [x] Dark mode verified
+- [x] Admin panel tested
+- [x] Voting flow tested end-to-end
 
 ---
 
 ## Future Phases (Post-MVP)
 
-### Phase 8: Match History Tracking
-- Record game results (winner, loser, score)
-- Singles and doubles support
-- Match statistics
+## Phase 8: Match History Tracking
+**Estimated: 3-4 giờ**
+
+- [x] **8.1** Database Schema for Matches
+  - Create `matches` table (id, type, team_a_score, team_b_score, created_at)
+  - Create `match_participants` table (id, match_id, user_id, team)
+  - Add SQL script `supabase/phase_8_matches.sql`
+- [x] **8.2** Implement Match API
+  - `POST /api/matches` (Record result and players)
+  - `GET /api/matches` (Recent global matches feed)
+  - `GET /api/users/:id/matches` (Specific user's match history)
+- [x] **8.3** Create Match Recorder UI
+  - Modal/Page for recording match
+  - Select Singles (1v1) or Doubles (2v2)
+  - Player selectors with Avatars
+  - Input scores (VD: 21-19)
+- [x] **8.4** Create Global Match History UI
+  - Add a Feed component to show all recent matches
+  - Highlight winner/loser
+- [x] **8.5** Player Match Statistics
+  - Update Personal Profile page
+  - Show Win/Loss ratio, total matches played
 
 ### Phase 9: Elo-Based Ranking
 - Implement Elo rating algorithm

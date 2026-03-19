@@ -1,0 +1,153 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem;
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  border: 1px dashed var(--border-color, #cbd5e1);
+  color: var(--text-secondary, #64748b);
+  margin-top: 1.5rem;
+}
+
+.emptyIcon {
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.matchRow:hover {
+  transform: translateY(-2px);
+}
+
+.winBg {
+  border-left: 4px solid #10b981;
+}
+
+.lossBg {
+  border-left: 4px solid #ef4444;
+}
+
+.matchMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 100px;
+}
+
+.matchType {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: inherit;
+  background: var(--bg-hover, rgba(255,255,255,0.1));
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.matchDate {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.resultBadge {
+  min-width: 80px;
+  text-align: center;
+}
+
+.badgeWin, .badgeDraw, .badgeLoss {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+.badgeWin {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.badgeLoss {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.badgeDraw {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.scoreBoard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-grow: 1;
+  justify-content: flex-end;
+}
+
+.myTeam, .oppTeam {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+}
+
+.score {
+  font-size: 1.5rem;
+  font-weight: 800;
+  min-width: 30px;
+  text-align: center;
+}
+
+.winScore {
+  color: #10b981;
+}
+
+.lossScore {
+  color: #ef4444; /* Changed from grey to red */
+}
+
+.vs {
+  font-weight: 700;
+  color: var(--border-color, #cbd5e1);
+}
+
+@media (max-width: 600px) {
+  .matchRow {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .scoreBoard {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

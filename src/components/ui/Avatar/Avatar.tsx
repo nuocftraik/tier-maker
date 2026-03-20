@@ -28,7 +28,19 @@ export const Avatar: React.FC<AvatarProps> = ({
     .toUpperCase();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const imageUrl = src ? `${supabaseUrl}/storage/v1/object/public/avatars/${src}` : null;
+  let imageUrl = null;
+  
+  if (src) {
+    if (src.startsWith('http')) {
+      imageUrl = src;
+    } else {
+      imageUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${src}`;
+      // Fallback if env variable is missing but we know the path
+      if (!supabaseUrl && src) {
+        imageUrl = `https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${src}`;
+      }
+    }
+  }
 
   return (
     <div

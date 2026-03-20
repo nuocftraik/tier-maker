@@ -249,20 +249,44 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
   - Update Personal Profile page
   - Show Win/Loss ratio, total matches played
 
-### Phase 9: Elo-Based Ranking
-- Implement Elo rating algorithm
-- Dual ranking: community vote + Elo
-- Historical rating graph
-
-### Phase 10: Automated Matchmaking
+### Phase 9: Elo-Based Ranking (Tạm hoãn)
+- [ ] Implement Elo rating algorithm
+- [ ] Dual ranking: community vote + Elo
+- [ ] Historical rating graph
+- [ ] Integrate ELO changes into Match History UI
 - Skill-based pairing suggestions
 - Singles and doubles matchmaking
 - Fair team generation
 
 ### Phase 11: Tournament Features
-- Bracket generation
-- Tournament modes (round-robin, elimination)
-- Tournament history
+**Estimated: 5-7 giờ**
+
+- [x] **11.1** Database Schema for Tournaments
+  - Create `tournaments` table (id, name, type, status, winner_id, created_at)
+  - Create `tournament_participants` table (tournament_id, user_id, seed)
+  - Add `tournament_id`, `round_number`, `match_order` to `matches` table (allow null for standard matches)
+  - Add SQL script `supabase/phase_11_tournaments.sql`
+- [x] **11.2** Implement Tournament API
+  - `POST /api/tournaments` (Create new tournament)
+  - `GET /api/tournaments` (List tournaments)
+  - `GET /api/tournaments/:id` (Get tournament details with bracket)
+  - `POST /api/tournaments/:id/generate-bracket` (Generate matches based on type/participants)
+- [x] **11.3** Create Tournament Portal UI
+  - Page showing list of active and past tournaments
+  - Navigation in Navbar (Tournament icon 🏆)
+- [x] **11.4** Tournament Creation & Management (Admin Only)
+  - UI for naming tournament, selecting type (Elimination/Round-robin)
+  - Player picker (multiple select) with seed assignment
+- [x] **11.5** Implementation: Single Elimination Bracket
+  - Algorithm to generate bracket matches (power of 2 handling)
+  - UI for viewing the bracket (interactive tree)
+  - Recording match results updates bracket progression automatically
+- [x] **11.6** Implementation: Round Robin System
+  - Algorithm to generate all-vs-all match schedule
+  - Standings table with Win/Loss/Points/Diff
+- [x] **11.7** Tournament Finalization & History
+  - Mark tournament as completed, award winner badge
+  - Update user profile to list tournament podium positions
 
 ### Phase 12: Social Features
 - Comments on profiles

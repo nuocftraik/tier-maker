@@ -1,0 +1,194 @@
+.wrapper {
+  margin-top: 1.5rem;
+}
+
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.topTitle {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-dim);
+  font-weight: 500;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Pool section */
+.pool {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  position: sticky;
+  top: 5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.poolHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-dim);
+}
+
+.poolList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Common player card style */
+.playerCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  cursor: grab;
+  transition: all 0.2s ease;
+  user-select: none;
+  position: relative;
+}
+
+.playerCard:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.playerCard:active {
+  cursor: grabbing;
+}
+
+.grip {
+  color: var(--color-text-dim);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.removeBtn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #ef4444;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.playerCard:hover .removeBtn {
+  opacity: 1;
+}
+
+/* Groups grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.groupCard {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 1rem;
+  overflow: hidden;
+  min-height: 200px;
+  transition: border-color 0.2s ease;
+}
+
+.groupCard:hover {
+  border-color: var(--color-primary-light);
+}
+
+.groupHeader {
+  background-color: var(--bg-primary);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-color);
+  color: var(--color-primary);
+}
+
+.count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  background-color: var(--bg-secondary);
+  border-radius: 1rem;
+  color: var(--color-text-dim);
+}
+
+.groupList {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 154px;
+}
+
+.emptyGroup {
+  border: 2px dashed var(--border-color);
+  border-radius: 0.75rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  font-style: italic;
+  padding: 2rem 0;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,189 @@
+.bracketWrapper {
+  overflow-x: auto;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.bracketContainer {
+  display: flex;
+  min-width: fit-content;
+  gap: 3rem;
+  padding-bottom: 2rem;
+}
+
+.round {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 200px;
+}
+
+.teamContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.playerStack {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+  .bracketContainer {
+    gap: 1.5rem;
+  }
+  
+  .matchBox {
+    width: 180px;
+  }
+}
+
+.roundHeader {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  color: var(--color-primary);
+  background-color: var(--bg-secondary);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.matches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+}
+
+.matchItem {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.matchBox {
+  width: 220px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.playerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.playerName {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.placeholder {
+  color: var(--color-text-dim);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.score {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 1.15rem;
+  text-align: right;
+  min-width: 2rem;
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.winner {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.loser {
+  opacity: 0.6;
+}
+
+.connector {
+  position: absolute;
+  right: -3rem;
+  width: 3rem;
+  height: 2px;
+  background-color: var(--border-color);
+}
+
+/* Branching logic with pseudo elements */
+.round:not(:last-child) .matchItem::after {
+  content: '';
+  position: absolute;
+  right: -3rem;
+  width: 2px;
+  background-color: var(--border-color);
+}
+
+/* This is a simplified version. For a real tree structure, we'd adjust heights dynamically. */
+/* Using flex: 1 and justify-content: space-around handles basic centering of matches in subsequent rounds. */
+.championRound .roundHeader {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.championCard {
+  border: 2px solid #fbbf24 !important;
+  background-color: rgba(251, 191, 36, 0.05) !important;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3) !important;
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.winnerPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  color: var(--color-text-dim);
+  width: 100%;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
+.trophyIcon {
+  color: #fbbf24;
+  animation: TrophySpin 4s linear infinite;
+}
+
+@keyframes TrophySpin {
+  from { transform: rotateY(0); }
+  to { transform: rotateY(360deg); }
+}
+
+.round:last-child .matchItem::after {
+  display: none;
+}

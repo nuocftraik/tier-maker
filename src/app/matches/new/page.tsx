@@ -2,27 +2,59 @@
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
-import { useRouter } from 'next/navigation';
-import { User, Users, Swords, Save } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { User, Users, Swords, Save, Lock } from 'lucide-react';
 import styles from './MatchesNew.module.css';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 export default function NewMatchPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <MatchForm />
+    </React.Suspense>
+  );
+}
+
+function MatchForm() {
   const router = useRouter();
-  const { data, error, isLoading } = useSWR('/api/users', fetcher);
+  const searchParams = useSearchParams();
+  const matchId = searchParams.get('match');
+  const tournamentId = searchParams.get('tournament');
+
+  const { data: usersData, error, isLoading } = useSWR('/api/users', fetcher);
+  const { data: matchData } = useSWR(matchId ? `/api/matches/${matchId}` : null, fetcher);
+  const { data: tournamentData } = useSWR(tournamentId ? `/api/tournaments/${tournamentId}` : null, fetcher);
   
-  const [type, setType] = useState<'singles'|'doubles'>('doubles');
+  const [type, setType] = useState<'singles'|'doubles'>('singles');
   const [teamA, setTeamA] = useState<string[]>([]);
   const [teamB, setTeamB] = useState<string[]>([]);
   const [scoreA, setScoreA] = useState<number>(21);
   const [scoreB, setScoreB] = useState<number>(19);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [initialLoaded, setInitialLoaded] = useState(false);
 
-  const users = Array.isArray(data) ? data : (data?.users || []);
+  // Sync with fetched data
+  React.useEffect(() => {
+    if (matchData?.match && !initialLoaded) {
+      const match = matchData.match;
+      setTeamA(match.team_a?.map((p: any) => p.id) || []);
+      setTeamB(match.team_b?.map((p: any) => p.id) || []);
+      setScoreA(match.team_a_score || 0);
+      setScoreB(match.team_b_score || 0);
+      setType(match.type === 'doubles' ? 'doubles' : 'singles');
+      setInitialLoaded(true);
+    } else if (tournamentData?.tournament && !initialLoaded) {
+      setType(tournamentData.tournament.match_mode === 'doubles' ? 'doubles' : 'singles');
+      // We don't set initialLoaded to true yet because matchData might still arrive
+    }
+  }, [matchData, tournamentData, initialLoaded]);
+
+  const users = Array.isArray(usersData) ? usersData : (usersData?.users || []);
 
   const togglePlayer = (team: 'A' | 'B', userId: string) => {
+    if (matchId) return; // Không được sửa người chơi khi ghi kết quả tournament/trận cũ
     const maxPlayers = type === 'singles' ? 1 : 2;
     const currentTeam = team === 'A' ? teamA : teamB;
     const setFunc = team === 'A' ? setTeamA : setTeamB;
@@ -60,8 +92,11 @@ export default function NewMatchPage() {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/matches', {
-        method: 'POST',
+      const url = matchId ? `/api/matches/${matchId}` : '/api/matches';
+      const method = matchId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type,
@@ -74,8 +109,11 @@ export default function NewMatchPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lỗi lưu trận đấu');
       
-      // Chuyển về màn feed hoặc danh sách
-      router.push('/matches'); 
+      if (tournamentId) {
+        router.push(`/tournaments/${tournamentId}`);
+      } else {
+        router.push('/matches'); 
+      }
     } catch (err: any) {
       setErrorMessage(err.message);
       setSubmitting(false);
@@ -103,18 +141,20 @@ export default function NewMatchPage() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.section}>
             <label className={styles.label}>Thể thức thi đấu</label>
-            <div className={styles.typeSelector}>
+            <div className={`${styles.typeSelector} ${(matchId || tournamentId) ? styles.lockedSelector : ''}`}>
               <button
                 type="button"
                 className={`${styles.typeBtn} ${type === 'singles' ? styles.activeType : ''}`}
-                onClick={() => { setType('singles'); setTeamA([]); setTeamB([]); }}
+                onClick={() => { if (!matchId && !tournamentId) { setType('singles'); setTeamA([]); setTeamB([]); } }}
+                disabled={!!matchId || !!tournamentId}
               >
                 <User size={20} /> Đánh đơn (1v1)
               </button>
               <button
                 type="button"
                 className={`${styles.typeBtn} ${type === 'doubles' ? styles.activeType : ''}`}
-                onClick={() => { setType('doubles'); setTeamA([]); setTeamB([]); }}
+                onClick={() => { if (!matchId && !tournamentId) { setType('doubles'); setTeamA([]); setTeamB([]); } }}
+                disabled={!!matchId || !!tournamentId}
               >
                 <Users size={20} /> Đánh đôi (2v2)
               </button>
@@ -139,15 +179,21 @@ export default function NewMatchPage() {
               </div>
               
               <div className={styles.playerSelection}>
-                <p className={styles.helperText}>Chọn thành viên ({teamA.length}/{type === 'singles' ? 1 : 2}):</p>
-                <div className={styles.playerList}>
-                  {users.map((u: any) => (
+                <p className={styles.helperText}>
+                  {matchId ? <><Lock size={12} /> Thành viên đã được xếp</> : `Chọn thành viên (${teamA.length}/${type === 'singles' ? 1 : 2}):`}
+                </p>
+                <div className={`${styles.playerList} ${matchId ? styles.locked : ''}`}>
+                  {users.filter((u: any) => !matchId || teamA.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id}
                       onClick={() => togglePlayer('A', u.id)}
                       className={`${styles.playerAvatar} ${isPlayerSelected('A', u.id) ? styles.selectedA : ''}`}
                     >
-                      <img src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${u.avatar_url}`} alt={u.name} />
+                      <img 
+                        src={u.avatar_url ? `https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${u.avatar_url}` : '/default-avatar.png'} 
+                        alt={u.name} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + u.name; }}
+                      />
                       <span className={styles.playerName} title={u.name}>{u.name}</span>
                     </div>
                   ))}
@@ -175,15 +221,21 @@ export default function NewMatchPage() {
               </div>
               
               <div className={styles.playerSelection}>
-                <p className={styles.helperText}>Chọn thành viên ({teamB.length}/{type === 'singles' ? 1 : 2}):</p>
-                <div className={styles.playerList}>
-                  {users.map((u: any) => (
+                <p className={styles.helperText}>
+                  {matchId ? <><Lock size={12} /> Thành viên đã được xếp</> : `Chọn thành viên (${teamB.length}/${type === 'singles' ? 1 : 2}):`}
+                </p>
+                <div className={`${styles.playerList} ${matchId ? styles.locked : ''}`}>
+                  {users.filter((u: any) => !matchId || teamB.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id}
                       onClick={() => togglePlayer('B', u.id)}
                       className={`${styles.playerAvatar} ${isPlayerSelected('B', u.id) ? styles.selectedB : ''}`}
                     >
-                      <img src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${u.avatar_url}`} alt={u.name} />
+                      <img 
+                        src={u.avatar_url ? `https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${u.avatar_url}` : '/default-avatar.png'} 
+                        alt={u.name} 
+                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + u.name; }}
+                      />
                       <span className={styles.playerName} title={u.name}>{u.name}</span>
                     </div>
                   ))}

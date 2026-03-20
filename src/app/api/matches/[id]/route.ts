@@ -68,23 +68,57 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     if (!type || !['singles', 'doubles'].includes(type)) return NextResponse.json({ error: 'Sai loại trận' }, { status: 400 });
     if (typeof team_a_score !== 'number' || typeof team_b_score !== 'number') return NextResponse.json({ error: 'Sai điểm' }, { status: 400 });
 
-    // Cập nhật điểm trận đấu (Không cho phép đổi type)
-    const { error: matchError } = await supabase.from('matches')
+    // Cập nhật điểm trận đấu và lấy thông tin để xử lý progression
+    const { data: fullMatch, error: matchError } = await supabase.from('matches')
       .update({ team_a_score, team_b_score, updated_at: new Date().toISOString() })
-      .eq('id', params.id);
+      .eq('id', params.id)
+      .select('tournament_id, next_match_id, match_order')
+      .single();
 
-    if (matchError) throw matchError;
+    if (matchError || !fullMatch) throw matchError || new Error('Không thể cập nhật trận đấu');
 
-    // Cập nhật participants (xóa cũ thêm mới cho an toàn)
+    // Cập nhật participants (xóa cũ thêm mới để đồng bộ với body)
     await supabase.from('match_participants').delete().eq('match_id', params.id);
-
     const participants = [
       ...team_a_players.map((uid: string) => ({ match_id: params.id, user_id: uid, team: 'A' })),
       ...team_b_players.map((uid: string) => ({ match_id: params.id, user_id: uid, team: 'B' }))
     ];
-
     const { error: partError } = await supabase.from('match_participants').insert(participants);
     if (partError) throw partError;
+
+    // --- Tournament Progression Logic ---
+    if (fullMatch.tournament_id) {
+      const winningTeamPlayers = team_a_score > team_b_score ? team_a_players : (team_b_score > team_a_score ? team_b_players : []);
+      
+      if (winningTeamPlayers.length > 0) {
+        // Since matches.winner_id doesn't exist, we don't save it there. 
+        // We only use the winner in the next_match_id logic or tournament completion.
+
+        if (fullMatch.next_match_id) {
+          const nextTeam = ((fullMatch.match_order - 1) % 2 === 0) ? 'A' : 'B';
+          
+          await supabase.from('match_participants').delete().eq('match_id', fullMatch.next_match_id).eq('team', nextTeam);
+
+          const nextParticipants = winningTeamPlayers.map((uid: string) => ({
+            match_id: fullMatch.next_match_id,
+            user_id: uid,
+            team: nextTeam
+          }));
+          
+          const { error: insError } = await supabase.from('match_participants').insert(nextParticipants);
+          if (insError) console.error('Advance Winner Error:', insError);
+        } else {
+          // Final match logic
+          const { data: tournament } = await supabase.from('tournaments').select('type').eq('id', fullMatch.tournament_id).single();
+          if (tournament?.type === 'elimination' || (tournament?.type === 'custom' && !fullMatch.next_match_id)) {
+             // Only update status to completed, as winner_id might not exist in tournaments table either
+             await supabase.from('tournaments')
+               .update({ status: 'completed' })
+               .eq('id', fullMatch.tournament_id);
+          }
+        }
+      }
+    }
 
     return NextResponse.json({ message: 'Đã cập nhật trận đấu' });
   } catch (error: any) {

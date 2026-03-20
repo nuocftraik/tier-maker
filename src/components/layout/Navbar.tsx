@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import styles from './Navbar.module.css';
-import { LogOut, Trophy, CheckSquare, User, ShieldAlert, Swords } from 'lucide-react';
+import { LogOut, Trophy, CheckSquare, User, ShieldAlert, Swords, Medal } from 'lucide-react';
 
 export const Navbar = ({ session }: { session: any }) => {
   const pathname = usePathname();
@@ -19,6 +19,7 @@ export const Navbar = ({ session }: { session: any }) => {
 
   const navItems = [
     { name: 'Xếp hạng', href: '/leaderboard', icon: <Trophy size={18} /> },
+    { name: 'Giải đấu', href: '/tournaments', icon: <Medal size={18} /> },
     { name: 'Bỏ phiếu', href: '/vote', icon: <CheckSquare size={18} /> },
     { name: 'Trận đấu', href: '/matches', icon: <Swords size={18} /> },
     { name: 'Cá nhân', href: `/profile/${session?.id}`, icon: <User size={18} /> },

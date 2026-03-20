@@ -1,0 +1,318 @@
+.wrapper {
+  margin-top: 1.5rem;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.topTitle {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.topActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.actionBtn, .actionBtnDanger {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.actionBtnDanger {
+  color: #ef4444;
+}
+.actionBtnDanger:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+[data-theme="dark"] .actionBtnDanger:hover {
+  background-color: #450a0a;
+}
+
+/* Layout: pool on left, bracket on right */
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Player Pool */
+.pool {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  position: sticky;
+  top: 5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  transition: border-color 0.2s ease;
+}
+
+.pool:hover {
+  border-color: var(--color-primary-light);
+}
+
+.poolHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--color-text-dim);
+}
+
+.poolList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.poolPlayer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  cursor: grab;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.poolPlayer:hover {
+  border-color: var(--color-primary);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.poolPlayer:active {
+  cursor: grabbing;
+}
+
+.grip {
+  color: var(--color-text-dim);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.poolName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poolEmpty {
+  text-align: center;
+  color: #10b981;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+}
+
+/* Bracket Area */
+.bracketArea {
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.bracketScroll {
+  display: flex;
+  gap: 2rem;
+  min-width: fit-content;
+}
+
+.round {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.roundLabel {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  background-color: var(--bg-secondary);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.25rem;
+}
+
+.doublesMatch {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: center;
+}
+
+.teamSlots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+}
+
+.roundMatches {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+  gap: 1.5rem;
+}
+
+.matchBox {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Slot */
+.slot {
+  padding: 0.65rem 0.75rem;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.slotEmpty {
+  background-color: var(--bg-primary);
+  border: 1px dashed transparent;
+}
+
+.slotDropTarget {
+  border-color: var(--color-primary) !important;
+  background-color: rgba(41, 121, 255, 0.04) !important;
+}
+
+.slotFilled {
+  background-color: var(--bg-primary);
+}
+
+.slotFuture {
+  background-color: var(--bg-primary);
+  opacity: 0.5;
+  justify-content: center;
+}
+
+.slotPlayer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  cursor: grab;
+  user-select: none;
+}
+
+.slotPlayer:active {
+  cursor: grabbing;
+}
+
+.slotName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slotPlaceholder {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.slotBye {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.slotPlayer:hover .removeBtn {
+  opacity: 1;
+}
+
+.removeBtn:hover {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.vs {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: var(--color-text-dim);
+  padding: 0.15rem 0;
+  background-color: var(--bg-secondary);
+  letter-spacing: 0.1em;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pool {
+    position: static;
+    max-height: none;
+  }
+
+  .poolList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}

@@ -300,6 +300,29 @@
   letter-spacing: 0.1em;
 }
 
+/* Round Robin Seeding overrides */
+.roundRobinSeeding .roundMatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.roundRobinSeeding .vs {
+  display: none;
+}
+
+.teamNumber {
+  background-color: var(--bg-primary);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .layout {

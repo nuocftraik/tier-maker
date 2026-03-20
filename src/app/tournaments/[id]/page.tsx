@@ -118,6 +118,64 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   if (error) return <div className="p-8 text-center text-red-500"><AlertCircle className="mx-auto mb-2" /> Lỗi tải thông tin giải đấu</div>;
   if (!tournament && !isLoading) return <div className="p-8 text-center">Không tìm thấy giải đấu</div>;
 
+  const renderRoundMatches = (matchesToRender: any[]) => {
+    // Group by round_number
+    const rounds: Record<number, any[]> = {};
+    matchesToRender.forEach((m: any) => {
+      const r = m.round_number || 1;
+      if (!rounds[r]) rounds[r] = [];
+      rounds[r].push(m);
+    });
+
+    return Object.keys(rounds).sort((a,b) => Number(a)-Number(b)).map(r => {
+      const roundNum = Number(r);
+      const roundMatchesArr = rounds[roundNum];
+      return (
+        <div key={roundNum} className={styles.roundGroup}>
+          <h4 className={styles.roundTitle}>
+            <Calendar size={16} /> 
+            {tournament?.type === 'round_robin' || tournament?.type === 'custom' ? `Lượt trận ${roundNum}` : getRoundLabel(roundNum, 1)}
+          </h4>
+          <div className={styles.matchList}>
+            {roundMatchesArr.map((match: any) => (
+              <div key={match.match_id} className={styles.matchCard}>
+                <div className={styles.matchMeta}>TRẬN #{match.match_order}</div>
+                <div className={styles.matchContent}>
+                  <div className={styles.team}>
+                    {match.team_a?.map((p: any) => (
+                      <div key={p.id} className={styles.teamMember}>
+                        <Avatar src={p.avatar_url} alt="" size="sm" />
+                        <span>{p.name}</span>
+                      </div>
+                    )) || 'TBD'}
+                  </div>
+                  <div className={styles.scoreContainer}>
+                    <div className={styles.score}>{match.team_a_score}</div>
+                    <div className={styles.scoreSeparator}>-</div>
+                    <div className={styles.score}>{match.team_b_score}</div>
+                  </div>
+                  <div className={styles.team} style={{ textAlign: 'right', flexDirection: 'row-reverse' }}>
+                    {match.team_b?.map((p: any) => (
+                      <div key={p.id} className={styles.teamMember} style={{ flexDirection: 'row-reverse' }}>
+                        <Avatar src={p.avatar_url} alt="" size="sm" />
+                        <span>{p.name}</span>
+                      </div>
+                    )) || 'TBD'}
+                  </div>
+                </div>
+                {tournament.status === 'active' && !tournament.winner_id && (
+                  <Link href={`/matches/new?tournament=${id}&match=${match.match_id}`} className={styles.recordBtn}>
+                    Ghi kết quả
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    });
+  };
+
   // Determine what to show in main area
   const renderMainContent = () => {
     if (tournament?.status === 'draft') {
@@ -139,15 +197,23 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
     }
 
     if (tournament?.type === 'elimination' || tournament?.type === 'round_robin') {
-      const content = tournament?.type === 'elimination' 
-        ? <Bracket matches={matches} tournamentId={id} />
-        : <StandingsTable participants={participants} matches={matches} />;
-
       return (
         <div className={styles.simpleLayout}>
-          {tournament?.type === 'elimination' && <h2 className={styles.sectionTitle}>Sơ đồ thi đấu</h2>}
-          {tournament?.type === 'round_robin' && <h2 className={styles.sectionTitle}>Bảng xếp hạng</h2>}
-          {content}
+          {tournament?.type === 'elimination' && (
+            <>
+              <h2 className={styles.sectionTitle}>Sơ đồ thi đấu</h2>
+              <Bracket matches={matches} tournamentId={id} />
+            </>
+          )}
+          {tournament?.type === 'round_robin' && (
+            <>
+              <h2 className={styles.sectionTitle}>Bảng xếp hạng</h2>
+              <StandingsTable participants={participants} matches={matches} matchMode={tournament.match_mode} />
+              
+              <h2 className={styles.sectionTitle} style={{ marginTop: '3rem' }}>Lịch thi đấu</h2>
+              {renderRoundMatches(matches)}
+            </>
+          )}
         </div>
       );
     }
@@ -171,7 +237,10 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
               return (
                 <div key={groupNum} className={styles.groupSection}>
                   <h3 className={styles.groupTitle}>Bảng {String.fromCharCode(64 + groupNum)}</h3>
-                  <StandingsTable participants={groupPlayers} matches={gMatches} />
+                  <StandingsTable participants={groupPlayers} matches={gMatches} matchMode={tournament.match_mode} />
+                  <div className={styles.groupMatchesPreview}>
+                    {renderRoundMatches(gMatches)}
+                  </div>
                 </div>
               );
             })}
@@ -316,62 +385,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             )}
 
             {renderMainContent()}
-            
-            {/* Match feed */}
-            {tournament?.status !== 'draft' && (
-              <section className={styles.matchesSection}>
-                <h2 className={styles.sectionTitle}>Danh sách trận đấu</h2>
-                <div className={styles.matchGroups}>
-                  {matches.length === 0 ? (
-                    <p className={styles.emptyText}>Chưa có trận đấu nào được tạo.</p>
-                  ) : (() => {
-                    const rounds: Record<number, any[]> = {};
-                    matches.forEach((m: any) => {
-                      if (!rounds[m.round_number]) rounds[m.round_number] = [];
-                      rounds[m.round_number].push(m);
-                    });
-
-                    const roundNums = Object.keys(rounds).map(Number).sort((a, b) => a - b);
-                    const totalRounds = Math.max(...roundNums, 0);
-
-                    return roundNums.map(rNum => (
-                      <div key={rNum} className={styles.roundGroup}>
-                        <h3 className={styles.roundTitle}>
-                          <Trophy size={16} /> {getRoundLabel(rNum, totalRounds)}
-                        </h3>
-                        <div className={styles.matchList}>
-                          {rounds[rNum].map((match: any) => (
-                            <div key={match.match_id} className={styles.matchCard}>
-                              <div className={styles.matchMeta}>
-                                {match.stage === 'group' && match.group_number ? `Bảng ${String.fromCharCode(64 + match.group_number)} — ` : ''}
-                                {match.stage === 'knockout' ? '🏆 Knockout — ' : ''}
-                                Trận {match.match_order}
-                              </div>
-                              <div className={styles.matchContent}>
-                                <div className={styles.team}>
-                                  {match.team_a?.map((p: any) => p.name).join(', ') || 'TBD'}
-                                </div>
-                                <div className={styles.score}>
-                                  {match.team_a_score} - {match.team_b_score}
-                                </div>
-                                <div className={styles.team}>
-                                  {match.team_b?.map((p: any) => p.name).join(', ') || 'TBD'}
-                                </div>
-                              </div>
-                              {tournament.status === 'active' && !tournament.winner_id && (
-                                <Link href={`/matches/new?tournament=${id}&match=${match.match_id}`} className={styles.recordBtn}>
-                                  Ghi kết quả
-                                </Link>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </section>
-            )}
           </div>
 
           {/* Sidebar */}

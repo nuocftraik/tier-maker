@@ -36,6 +36,20 @@
   gap: 1rem;
 }
 
+.avatarGroup {
+  display: flex;
+  align-items: center;
+}
+
+.avatarGroup > * {
+  margin-left: -12px;
+  border: 2px solid var(--bg-secondary);
+}
+
+.avatarGroup > *:first-child {
+  margin-left: 0;
+}
+
 .winCount {
   color: #10b981;
   font-weight: 700;

@@ -12,12 +12,13 @@ interface Player {
 }
 
 interface BracketSeederProps {
-  players: Player[];             // All selected participants
+  players: Player[];
   matchMode?: 'singles' | 'doubles';
-  onSeedingChange: (orderedIds: string[]) => void;  // Callback with final ordering
+  type?: 'elimination' | 'round_robin' | 'custom';
+  onSeedingChange: (orderedIds: string[]) => void;
 }
 
-export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode, onSeedingChange }) => {
+export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode, type, onSeedingChange }) => {
   // Calculate bracket structure
   const isDoubles = matchMode === 'doubles';
   const entityCount = isDoubles ? Math.ceil(players.length / 2) : players.length;
@@ -177,7 +178,9 @@ export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode
         });
       }
     }
-    allRounds.push({ label: getRoundLabel(1, rounds), matches: r1Matches });
+    allRounds.push({ label: type === 'round_robin' ? 'Đội thi đấu' : getRoundLabel(1, rounds), matches: r1Matches });
+
+    if (type === 'round_robin') return allRounds;
 
     // Subsequent rounds are just visual placeholders (no drag)
     let matchesInRound = round1Matches;
@@ -198,7 +201,9 @@ export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode
   return (
     <div className={styles.wrapper}>
       <div className={styles.topBar}>
-        <h3 className={styles.topTitle}>Kéo thả VĐV vào sơ đồ thi đấu</h3>
+        <h3 className={styles.topTitle}>
+          {type === 'round_robin' ? 'Sắp xếp Cặp đấu (2v2)' : 'Kéo thả VĐV vào sơ đồ thi đấu'}
+        </h3>
         <div className={styles.topActions}>
           <button type="button" onClick={handleAutoFill} className={styles.actionBtn}>
             Tự động điền
@@ -247,7 +252,7 @@ export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode
         </div>
 
         {/* Bracket Preview */}
-        <div className={styles.bracketArea}>
+        <div className={`${styles.bracketArea} ${type === 'round_robin' ? styles.roundRobinSeeding : ''}`}>
           <div className={styles.bracketScroll}>
             {roundsData.map((round, rIdx) => (
               <div key={rIdx} className={styles.round}>
@@ -255,6 +260,7 @@ export const BracketSeeder: React.FC<BracketSeederProps> = ({ players, matchMode
                 <div className={styles.roundMatches}>
                   {round.matches.map((match, mIdx) => (
                     <div key={mIdx} className={styles.matchBox}>
+                      <div className={styles.teamNumber}>Đội {mIdx + 1}</div>
                       {rIdx === 0 ? (
                         <>
                       {isDoubles ? (

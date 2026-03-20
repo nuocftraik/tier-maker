@@ -15,7 +15,7 @@ import { GroupSeeder } from '@/components/tournament/GroupSeeder';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-export default function EditTournamentPage({ params }: { params: React.Promise<{ id: string }> }) {
+export default function EditTournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = React.use(params);
   
@@ -99,6 +99,11 @@ export default function EditTournamentPage({ params }: { params: React.Promise<{
     e.preventDefault();
     if (selectedParticipants.length < 2) {
       alert('Cần ít nhất 2 người chơi');
+      return;
+    }
+
+    if (formData.match_mode === 'doubles' && selectedParticipants.length % 2 !== 0) {
+      alert('Số lượng vận động viên phải là số chẵn cho chế độ thi đấu Đôi (2 vs 2)');
       return;
     }
 
@@ -258,28 +263,19 @@ export default function EditTournamentPage({ params }: { params: React.Promise<{
             {/* Seeder Preview */}
             {formData.seeding_mode === 'manual' && selectedParticipants.length >= 2 && (
               <Card className={styles.participantCard}>
-                {formData.type === 'elimination' ? (
-                  <BracketSeeder 
-                    players={selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[]}
-                    matchMode={formData.match_mode as any}
-                    onSeedingChange={setSelectedParticipants}
-                  />
-                ) : formData.type === 'custom' ? (
+                {formData.type === 'custom' ? (
                   <GroupSeeder 
                     players={selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[]}
                     groupCount={formData.group_count}
                     onSeedingChange={setManualGroups}
                   />
                 ) : (
-                  <div className={styles.seedList}>
-                     {selectedParticipants.map((uid, idx) => (
-                        <div key={uid} className={styles.seedItem}>
-                           <span>#{idx+1}</span>
-                           <Avatar src={getUserById(uid)?.avatar_url || ''} alt="" size="sm" />
-                           <span>{getUserById(uid)?.name}</span>
-                        </div>
-                     ))}
-                  </div>
+                  <BracketSeeder 
+                    players={selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[]}
+                    matchMode={formData.match_mode as any}
+                    type={formData.type as any}
+                    onSeedingChange={setSelectedParticipants}
+                  />
                 )}
               </Card>
             )}

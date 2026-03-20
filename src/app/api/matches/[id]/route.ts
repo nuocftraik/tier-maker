@@ -45,6 +45,12 @@ export async function DELETE(request: Request, props: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Không có quyền xóa' }, { status: 403 });
     }
 
+    // Check if match belongs to a tournament
+    const { data: match } = await supabase.from('matches').select('tournament_id').eq('id', params.id).single();
+    if (match?.tournament_id) {
+      return NextResponse.json({ error: 'Không thể xóa riêng lẻ trận đấu thuộc giải đấu. Hệ thống cần các trận đấu này để duy trì sơ đồ và bảng xếp hạng. Hãy xóa toàn bộ giải đấu nếu cần.' }, { status: 400 });
+    }
+
     const { error } = await supabase.from('matches').delete().eq('id', params.id);
     if (error) throw error;
 

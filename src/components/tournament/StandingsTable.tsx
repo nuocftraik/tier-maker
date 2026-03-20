@@ -21,46 +21,68 @@ interface Match {
 interface StandingsProps {
   participants: any[];
   matches: Match[];
+  matchMode?: 'singles' | 'doubles';
 }
 
-export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches }) => {
-  // Calculate standings
-  const playerStats: Record<string, { id: string, name: string, avatar: string, wins: number, losses: number, ptsFor: number, ptsAgainst: number }> = {};
-  
-  participants.forEach(p => {
-    playerStats[p.user_id] = { id: p.user_id, name: p.user.name, avatar: p.user.avatar_url, wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0 };
-  });
+export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches, matchMode }) => {
+  const isDoubles = matchMode === 'doubles';
 
+  // Define entities (Individual or Team)
+  const entities: { id: string, name: string, avatars: string[], wins: number, losses: number, ptsFor: number, ptsAgainst: number }[] = [];
+  const entityMap: Record<string, number> = {}; // userId -> index in entities
+
+  if (isDoubles) {
+    // Group participants into pairs
+    for (let i = 0; i < participants.length; i += 2) {
+      const p1 = participants[i];
+      const p2 = participants[i + 1];
+      const id = p1.user_id + (p2 ? `_${p2.user_id}` : '');
+      const name = p1.user.name + (p2 ? ` & ${p2.user.name}` : '');
+      const avatars = [p1.user.avatar_url];
+      if (p2) avatars.push(p2.user.avatar_url);
+
+      const entityIdx = entities.length;
+      entities.push({ id, name, avatars, wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0 });
+      
+      entityMap[p1.user_id] = entityIdx;
+      if (p2) entityMap[p2.user_id] = entityIdx;
+    }
+  } else {
+    participants.forEach((p, idx) => {
+      entities.push({ 
+        id: p.user_id, 
+        name: p.user.name, 
+        avatars: [p.user.avatar_url], 
+        wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0 
+      });
+      entityMap[p.user_id] = idx;
+    });
+  }
+
+  // Calculate stats from matches
   matches.forEach(m => {
-    // Only count if scores are present (not 0-0 unless played)
-    // Actually tournament matches might have scores 0-x
-    if (m.team_a_score === 0 && m.team_b_score === 0 && m.team_a?.length === 0) return;
+    if (m.team_a_score === 0 && m.team_b_score === 0 && (!m.team_a || m.team_a.length === 0)) return;
     
-    const isPlayed = m.team_a?.length > 0 && m.team_b?.length > 0;
-    if (!isPlayed) return;
+    // Find entity index for Team A (use first player if team has multiple)
+    const teamAIdx = m.team_a?.[0] ? entityMap[m.team_a[0].id] : -1;
+    const teamBIdx = m.team_b?.[0] ? entityMap[m.team_b[0].id] : -1;
 
-    // Credit all players in Team A
-    m.team_a?.forEach(p => {
-      if (playerStats[p.id]) {
-        playerStats[p.id].ptsFor += m.team_a_score;
-        playerStats[p.id].ptsAgainst += m.team_b_score;
-        if (m.team_a_score > m.team_b_score) playerStats[p.id].wins++;
-        else if (m.team_a_score < m.team_b_score) playerStats[p.id].losses++;
-      }
-    });
-    
-    // Credit all players in Team B
-    m.team_b?.forEach(p => {
-      if (playerStats[p.id]) {
-        playerStats[p.id].ptsFor += m.team_b_score;
-        playerStats[p.id].ptsAgainst += m.team_a_score;
-        if (m.team_b_score > m.team_a_score) playerStats[p.id].wins++;
-        else if (m.team_b_score < m.team_a_score) playerStats[p.id].losses++;
-      }
-    });
+    if (teamAIdx !== -1) {
+      entities[teamAIdx].ptsFor += m.team_a_score;
+      entities[teamAIdx].ptsAgainst += m.team_b_score;
+      if (m.team_a_score > m.team_b_score) entities[teamAIdx].wins++;
+      else if (m.team_a_score < m.team_b_score) entities[teamAIdx].losses++;
+    }
+
+    if (teamBIdx !== -1) {
+      entities[teamBIdx].ptsFor += m.team_b_score;
+      entities[teamBIdx].ptsAgainst += m.team_a_score;
+      if (m.team_b_score > m.team_a_score) entities[teamBIdx].wins++;
+      else if (m.team_b_score < m.team_a_score) entities[teamBIdx].losses++;
+    }
   });
 
-  const sortedStats = Object.values(playerStats).sort((a, b) => {
+  const sortedStats = [...entities].sort((a, b) => {
     if (a.wins !== b.wins) return b.wins - a.wins;
     const diffA = a.ptsFor - a.ptsAgainst;
     const diffB = b.ptsFor - b.ptsAgainst;
@@ -84,7 +106,11 @@ export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches
             <tr key={stat.id} className={idx === 0 ? styles.topRow : ''}>
               <td>{idx + 1} {idx === 0 && <Trophy size={14} className={styles.trophy} />}</td>
               <td className={styles.userCell}>
-                <Avatar src={stat.avatar} alt={stat.name} size="sm" />
+                <div className={styles.avatarGroup}>
+                  {stat.avatars.map((av, aIdx) => (
+                    <Avatar key={aIdx} src={av} alt="" size="sm" />
+                  ))}
+                </div>
                 <span>{stat.name}</span>
               </td>
               <td className={styles.winCount}>{stat.wins}</td>

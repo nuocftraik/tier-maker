@@ -85,6 +85,11 @@ export default function NewTournamentPage() {
       return;
     }
 
+    if (formData.match_mode === 'doubles' && selectedParticipants.length % 2 !== 0) {
+      alert('Số lượng vận động viên phải là số chẵn cho chế độ thi đấu Đôi (2 vs 2)');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let participantsPayload: any;
@@ -345,17 +350,6 @@ export default function NewTournamentPage() {
               </div>
             </Card>
 
-            {/* Manual Seed — Bracket Seeder for elimination, linear list for others */}
-            {formData.seeding_mode === 'manual' && selectedParticipants.length >= 2 && formData.type === 'elimination' && (
-              <Card className={styles.participantCard}>
-                <BracketSeeder
-                  players={selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[]}
-                  matchMode={formData.match_mode as any}
-                  onSeedingChange={(orderedIds) => setSelectedParticipants(orderedIds)}
-                />
-              </Card>
-            )}
-
             {/* Manual Seed — Group Seeder for custom */}
             {formData.seeding_mode === 'manual' && selectedParticipants.length >= 2 && formData.type === 'custom' && (
               <Card className={styles.participantCard}>
@@ -367,48 +361,15 @@ export default function NewTournamentPage() {
               </Card>
             )}
 
-            {/* Manual Seed — linear list for round_robin */}
-            {formData.seeding_mode === 'manual' && selectedParticipants.length > 0 && formData.type === 'round_robin' && (
+            {/* Manual Seed — Seeding Tool for elimination & round_robin */}
+            {formData.seeding_mode === 'manual' && selectedParticipants.length >= 2 && (formData.type === 'elimination' || formData.type === 'round_robin') && (
               <Card className={styles.participantCard}>
-                <div className={styles.participantHeader}>
-                  <h2 className={styles.cardTitle}>Thứ tự hạt giống (kéo để sắp xếp)</h2>
-                  <button type="button" onClick={shuffleParticipants} className={styles.textBtn}>
-                    <Shuffle size={14} /> Xáo trộn
-                  </button>
-                </div>
-                <div className={styles.seedList}>
-                  {selectedParticipants.map((userId, index) => {
-                    const user = getUserById(userId);
-                    if (!user) return null;
-                    const groupLabel = formData.type === 'custom' 
-                      ? ` — Bảng ${String.fromCharCode(65 + (index % formData.group_count))}` 
-                      : '';
-                    return (
-                      <div 
-                        key={userId} 
-                        className={`${styles.seedItem} ${draggedIndex === index ? styles.dragging : ''}`}
-                        draggable
-                        onDragStart={() => setDraggedIndex(index)}
-                        onDragOver={(e) => { e.preventDefault(); }}
-                        onDrop={() => {
-                          if (draggedIndex !== null) {
-                            moveParticipant(draggedIndex, index);
-                            setDraggedIndex(null);
-                          }
-                        }}
-                        onDragEnd={() => setDraggedIndex(null)}
-                      >
-                        <GripVertical size={16} className={styles.gripIcon} />
-                        <span className={styles.seedNumber}>#{index + 1}</span>
-                        <Avatar src={user.avatar_url} alt={user.name} size="sm" />
-                        <span className={styles.seedName}>{user.name}</span>
-                        {formData.type === 'custom' && (
-                          <span className={styles.groupTag}>{groupLabel}</span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <BracketSeeder
+                  players={selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[]}
+                  matchMode={formData.match_mode as any}
+                  type={formData.type as any}
+                  onSeedingChange={(orderedIds) => setSelectedParticipants(orderedIds)}
+                />
               </Card>
             )}
           </div>

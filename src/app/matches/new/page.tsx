@@ -334,26 +334,38 @@ function MatchForm() {
                  Điểm chi tiết từng Ván (Tối đa {bestOf} ván)
                </h3>
                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-                 {Array.from({length: bestOf}).map((_, i) => (
-                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                     <span style={{ fontWeight: 600, color: 'var(--text-muted)', width: '60px' }}>Ván {i + 1}</span>
+                 {Array.from({length: bestOf}).map((_, i) => {
+                   const prevSets = setScores.slice(0, i);
+                   let aw = 0, bw = 0;
+                   prevSets.forEach(s => {
+                      if (s.a > s.b) aw++;
+                      else if (s.b > s.a) bw++;
+                   });
+                   const winsToWin = Math.ceil(bestOf / 2);
+                   const isDecided = aw >= winsToWin || bw >= winsToWin;
+
+                   return (
+                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', opacity: isDecided ? 0.3 : 1, pointerEvents: isDecided ? 'none' : 'auto' }}>
+                     <span style={{ fontWeight: 600, color: 'var(--text-muted)', width: '60px' }}>{isDecided ? 'Bỏ qua' : `Ván ${i + 1}`}</span>
                      <input 
                        type="number" 
                        min="0" 
-                       value={setScores[i]?.a || ''} 
+                       value={isDecided ? '' : (setScores[i]?.a || '')} 
                        onChange={(e) => updateSetScore(i, 'a', parseInt(e.target.value) || 0)} 
                        style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #ef4444', borderRadius: '8px', background: 'var(--background)' }} 
+                       disabled={isDecided}
                      />
                      <span style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>-</span>
                      <input 
                        type="number" 
                        min="0" 
-                       value={setScores[i]?.b || ''} 
+                       value={isDecided ? '' : (setScores[i]?.b || '')} 
                        onChange={(e) => updateSetScore(i, 'b', parseInt(e.target.value) || 0)} 
                        style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #3b82f6', borderRadius: '8px', background: 'var(--background)' }} 
+                       disabled={isDecided}
                      />
                    </div>
-                 ))}
+                 )})}
                </div>
                <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                  Tỉ số chung cuộc ({scoreA} - {scoreB}) được tự động tính dựa trên số ván thắng. Điền 0-0 để bỏ qua ván chưa đấu.

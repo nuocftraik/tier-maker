@@ -63,7 +63,7 @@ export const ProfileMatchHistory: React.FC<ProfileMatchHistoryProps> = ({ matche
         const oppTeam = isTeamA ? (match.team_b || []) : (match.team_a || []);
         const myScore = isTeamA ? match.team_a_score : match.team_b_score;
         const oppScore = isTeamA ? match.team_b_score : match.team_a_score;
-        const canEdit = session && (session.isAdmin || session.id === match.created_by);
+        const canEdit = session && (session.isAdmin || session.id === match.created_by) && !match.tournament_id;
 
         return (
           <div key={match.match_id} className={`${styles.matchRow} ${isWinner ? styles.winBg : isDraw ? '' : styles.lossBg}`}>
@@ -75,6 +75,11 @@ export const ProfileMatchHistory: React.FC<ProfileMatchHistoryProps> = ({ matche
               <span className={styles.matchDate}>
                 <Calendar size={12} /> {formatDate(match.created_at)}
               </span>
+              {match.tournament_id && (
+                <Link href={`/tournaments/${match.tournament_id}`} style={{ textDecoration: 'none', background: 'rgba(251,191,36,0.1)', color: '#fbbf24', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem', border: '1px solid rgba(251,191,36,0.2)' }} title="Đến giải đấu">
+                  🏆 {match.tournament_name || 'Giải đấu'}
+                </Link>
+              )}
               {canEdit && (
                 <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.5rem' }}>
                   <Link href={`/matches/${match.match_id}/edit`} style={{ color: 'var(--text-secondary)' }} title="Sửa">

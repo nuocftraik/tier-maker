@@ -134,22 +134,35 @@ export const InlineScoreModal: React.FC<InlineScoreModalProps> = ({ match, tourn
             <div style={setsContainer}>
                <h4 style={{textAlign:'center', marginBottom: '1rem'}}>Chi tiết từng ván (Tự cộng dồn: {scoreA} - {scoreB})</h4>
                <div style={{display: 'flex', flexDirection: 'column', gap: '0.8rem'}}>
-                 {Array.from({length: bestOf}).map((_, i) => (
-                    <div key={i} style={{display:'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem'}}>
-                       <span style={{width: '60px', color: 'var(--text-muted)'}}>Ván {i+1}</span>
-                       <input 
-                         type="number" min="0" value={setScores[i]?.a || ''} 
-                         onChange={(e)=>updateSet(i, 'a', parseInt(e.target.value)||0)}
-                         style={setInputStyle('#ef4444')}
-                       />
-                       <span>-</span>
-                       <input 
-                         type="number" min="0" value={setScores[i]?.b || ''} 
-                         onChange={(e)=>updateSet(i, 'b', parseInt(e.target.value)||0)}
-                         style={setInputStyle('#3b82f6')}
-                       />
-                    </div>
-                 ))}
+                 {Array.from({length: bestOf}).map((_, i) => {
+                    const prevSets = setScores.slice(0, i);
+                    let aw = 0, bw = 0;
+                    prevSets.forEach(s => {
+                       if (s.a > s.b) aw++;
+                       else if (s.b > s.a) bw++;
+                    });
+                    const winsToWin = Math.ceil(bestOf / 2);
+                    const isDecided = aw >= winsToWin || bw >= winsToWin;
+
+                    return (
+                      <div key={i} style={{display:'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', opacity: isDecided ? 0.3 : 1, pointerEvents: isDecided ? 'none' : 'auto'}}>
+                         <span style={{width: '60px', color: 'var(--text-muted)'}}>{isDecided ? 'Bỏ qua' : `Ván ${i+1}`}</span>
+                         <input 
+                           type="number" min="0" value={isDecided ? '' : (setScores[i]?.a || '')} 
+                           onChange={(e)=>updateSet(i, 'a', parseInt(e.target.value)||0)}
+                           style={setInputStyle('#ef4444')}
+                           disabled={isDecided}
+                         />
+                         <span>-</span>
+                         <input 
+                           type="number" min="0" value={isDecided ? '' : (setScores[i]?.b || '')} 
+                           onChange={(e)=>updateSet(i, 'b', parseInt(e.target.value)||0)}
+                           style={setInputStyle('#3b82f6')}
+                           disabled={isDecided}
+                         />
+                      </div>
+                    );
+                 })}
                </div>
             </div>
           )}

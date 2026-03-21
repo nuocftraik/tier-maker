@@ -92,6 +92,24 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
         if (final_set_scores.length === 0) final_set_scores = null;
     }
 
+    // Lấy trận cũ để kiểm tra xem có được thay đổi người thắng không
+    const { data: oldMatch } = await supabase.from('matches').select('team_a_score, team_b_score, next_match_id').eq('id', params.id).single();
+    
+    if (oldMatch) {
+      const oldWinner = oldMatch.team_a_score > oldMatch.team_b_score ? 'A' : (oldMatch.team_b_score > oldMatch.team_a_score ? 'B' : null);
+      const newWinner = team_a_score > team_b_score ? 'A' : (team_b_score > team_a_score ? 'B' : null);
+
+      if (oldWinner && newWinner && oldWinner !== newWinner && oldMatch.next_match_id) {
+         // Kiểm tra trận tiếp theo
+         const { data: nextMatch } = await supabase.from('matches').select('team_a_score, team_b_score, set_scores').eq('id', oldMatch.next_match_id).single();
+         const hasPlayed = nextMatch && (nextMatch.team_a_score > 0 || nextMatch.team_b_score > 0 || (nextMatch.set_scores && nextMatch.set_scores.length > 0));
+         
+         if (hasPlayed) {
+             return NextResponse.json({ error: 'Không thể thay đổi kết quả thắng/thua do trận tiếp theo ở vòng trong đã có tỉ số! Bạn chỉ được sửa lại điểm số sao cho giữ nguyên đội thắng.' }, { status: 400 });
+         }
+      }
+    }
+
     // Cập nhật điểm trận đấu và lấy thông tin để xử lý progression
     const { data: fullMatch, error: matchError } = await supabase.from('matches')
       .update({ team_a_score, team_b_score, set_scores: final_set_scores, updated_at: new Date().toISOString() })

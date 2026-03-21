@@ -132,7 +132,7 @@ export default function MatchesFeedPage() {
             const isTeamAWinner = match.team_a_score > match.team_b_score;
             const isTeamBWinner = match.team_b_score > match.team_a_score;
             const isDraw = (match.team_a_score === match.team_b_score) && match.team_a_score > 0;
-            const canEdit = session && (session.isAdmin || session.id === match.created_by);
+            const canEdit = session && (session.isAdmin || session.id === match.created_by) && !match.tournament_id;
 
             return (
               <div key={match.match_id} className={styles.matchCard}>
@@ -148,7 +148,9 @@ export default function MatchesFeedPage() {
                       <Calendar size={14} /> {formatDate(match.created_at)}
                     </span>
                     {match.tournament_id && (
-                      <span className={styles.tournamentTag}>🏆 Tournament</span>
+                      <Link href={`/tournaments/${match.tournament_id}`} className={styles.tournamentTag} style={{ textDecoration: 'none' }} title="Đến giải đấu">
+                        🏆 {match.tournament_name || 'Giải đấu'}
+                      </Link>
                     )}
                   </div>
                   {canEdit && (
@@ -156,11 +158,9 @@ export default function MatchesFeedPage() {
                       <Link href={`/matches/${match.match_id}/edit`} className={styles.actionBtnEdit} title="Sửa kết quả">
                         <Edit2 size={16} />
                       </Link>
-                      {!match.tournament_id && (
-                        <button onClick={() => handleDelete(match.match_id)} className={styles.actionBtnDelete} title="Xóa trận đấu">
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+                      <button onClick={() => handleDelete(match.match_id)} className={styles.actionBtnDelete} title="Xóa trận đấu">
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   )}
                 </div>

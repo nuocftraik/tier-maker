@@ -67,6 +67,19 @@ export async function GET(request: Request) {
            }
         });
       }
+
+      // Fetch tournament names
+      const tournamentIds = [...new Set(matches.map((m: any) => m.tournament_id).filter(Boolean))];
+      if (tournamentIds.length > 0) {
+        const { data: tournaments } = await supabase.from('tournaments').select('id, name').in('id', tournamentIds);
+        if (tournaments && tournaments.length > 0) {
+          matches.forEach((m: any) => {
+            if (m.tournament_id) {
+               m.tournament_name = tournaments.find((t: any) => t.id === m.tournament_id)?.name;
+            }
+          });
+        }
+      }
     }
 
     return NextResponse.json({ matches });

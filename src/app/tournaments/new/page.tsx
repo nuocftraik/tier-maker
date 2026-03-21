@@ -12,6 +12,7 @@ import styles from './NewTournament.module.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { BracketSeeder } from '@/components/tournament/BracketSeeder';
 import { GroupSeeder } from '@/components/tournament/GroupSeeder';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -23,19 +24,21 @@ export default function NewTournamentPage() {
   const { data: usersData } = useSWR('/api/users', fetcher);
   const users = usersData || [];
 
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     name: '',
     description: '',
     type: 'elimination',
     match_mode: 'singles',
     seeding_mode: 'random',
     group_count: 2,
-    advance_per_group: 1
+    advance_per_group: 1,
+    best_of: 1
   });
   
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [manualGroups, setManualGroups] = useState<{ userId: string, group: number }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   // Manual seed order - separate from selection
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -90,7 +93,12 @@ export default function NewTournamentPage() {
       return;
     }
 
+    setShowConfirmModal(true);
+  };
+
+  const confirmSubmit = async () => {
     setIsSubmitting(true);
+    setShowConfirmModal(false);
     try {
       let participantsPayload: any;
 
@@ -250,6 +258,19 @@ export default function NewTournamentPage() {
                 </div>
 
                 {/* Custom type config */}
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>Số ván thắng (Best of)</label>
+                  <select 
+                    className={styles.select}
+                    value={formData.best_of}
+                    onChange={e => setFormData({...formData, best_of: +e.target.value})}
+                  >
+                    <option value={1}>⚡ BO1 (Đánh 1 ván)</option>
+                    <option value={3}>🔥 BO3 (Đánh 3 thắng 2)</option>
+                    <option value={5}>🏆 BO5 (Đánh 5 thắng 3)</option>
+                  </select>
+                </div>
+
                 {formData.type === 'custom' && (
                   <div className={styles.customConfig}>
                     <div className={styles.configRow}>
@@ -374,6 +395,15 @@ export default function NewTournamentPage() {
             )}
           </div>
         </form>
+
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => setShowConfirmModal(false)}
+          onConfirm={confirmSubmit}
+          title="Xác nhận tạo Giải đấu"
+          message={`Hệ thống sẽ khởi tạo giải đấu "${formData.name}" với ${selectedParticipants.length} vận động viên. Bạn có chắc chắn muốn tạo ngay bây giờ?`}
+          confirmLabel="Xác nhận Tạo"
+        />
       </main>
     </div>
   );

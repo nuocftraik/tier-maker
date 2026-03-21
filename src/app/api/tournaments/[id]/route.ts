@@ -22,6 +22,11 @@ export async function GET(
     if (tournamentError) throw tournamentError;
     if (!tournament) return NextResponse.json({ error: 'Không tìm thấy giải đấu' }, { status: 404 });
 
+    // Parse Best of from description hack
+    const boSplit = tournament.description?.split('BO:');
+    tournament.best_of = boSplit && boSplit.length > 1 ? parseInt(boSplit[1]) : 1;
+    tournament.description = boSplit?.[0]?.trim();
+
     // 2. Fetch tournament participants
     const { data: participants, error: participantError } = await supabase
       .from('tournament_participants')
@@ -45,6 +50,24 @@ export async function GET(
 
     if (matchError) throw matchError;
 
+    // 4. Fetch set scores natively if match_details view hasn't been updated
+    if (matches && matches.length > 0) {
+      const parentIds = matches.map((m: any) => m.match_id);
+      const { data: nativeMatches } = await supabase
+        .from('matches')
+        .select('id, set_scores')
+        .in('id', parentIds);
+
+      if (nativeMatches && nativeMatches.length > 0) {
+        matches.forEach((m: any) => {
+           const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
+           if (nativeM && nativeM.set_scores) {
+               m.set_scores = nativeM.set_scores;
+           }
+        });
+      }
+    }
+
     return NextResponse.json({
       tournament,
       participants,
@@ -61,7 +84,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await props.params;
-    const { name, description, type, match_mode, seeding_mode, participants, group_count, advance_per_group } = await request.json();
+    const { name, description, type, match_mode, seeding_mode, participants, group_count, advance_per_group, best_of } = await request.json();
     
     // Auth Check
     const { isAdmin, error: authErr } = await checkAdmin();
@@ -79,7 +102,7 @@ export async function PUT(
       .from('tournaments')
       .update({
         name,
-        description,
+        description: `${description || ''}\n\nBO:${best_of || 1}`,
         type,
         match_mode,
         seeding_mode,

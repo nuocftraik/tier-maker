@@ -20,14 +20,17 @@ interface Match {
   round_number: number;
   match_order: number;
   next_match_id?: string;
+  set_scores?: {a: number, b: number}[];
 }
 
 interface BracketProps {
   matches: Match[];
   tournamentId: string;
+  canEdit?: boolean;
+  onMatchClick?: (match: Match) => void;
 }
 
-export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId }) => {
+export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId, canEdit = false, onMatchClick }) => {
   // Group matches by round
   const rounds: Record<number, Match[]> = {};
   matches.forEach(match => {
@@ -59,7 +62,7 @@ export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId }) => {
               {rounds[roundNum]
                 .sort((a, b) => a.match_order - b.match_order)
                 .map(match => (
-                  <MatchCard key={match.match_id} match={match} />
+                  <MatchCard key={match.match_id} match={match} tournamentId={tournamentId} canEdit={canEdit} onMatchClick={onMatchClick} />
                 ))}
             </div>
           </div>
@@ -106,14 +109,25 @@ export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId }) => {
   );
 };
 
-const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
+const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean; onMatchClick?: (match: Match) => void }> = ({ match, tournamentId, canEdit, onMatchClick }) => {
   const isTeamAWinner = match.team_a_score > match.team_b_score;
   const isTeamBWinner = match.team_b_score > match.team_a_score;
   const isPlayed = match.team_a_score !== 0 || match.team_b_score !== 0;
 
+  const handleClick = () => {
+    if (canEdit && match.team_a?.length > 0 && match.team_b?.length > 0) {
+      if (onMatchClick) onMatchClick(match);
+    }
+  };
+
   return (
     <div className={styles.matchItem}>
-      <div className={styles.matchBox}>
+      <div 
+        className={`${styles.matchBox} ${canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? styles.clickable : ''}`}
+        onClick={handleClick}
+        style={{ cursor: canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? 'pointer' : 'default' }}
+        title={canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? "Click để cập nhật tỉ số" : ""}
+      >
         {/* Team A */}
         <div className={`${styles.playerRow} ${isPlayed && isTeamAWinner ? styles.winner : ''} ${isPlayed && !isTeamAWinner && match.team_a?.length > 0 ? styles.loser : ''}`}>
           <div className={styles.playerInfo}>
@@ -130,7 +144,14 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
               <span className={styles.placeholder}>TBD</span>
             )}
           </div>
-          <div className={styles.score}>{match.team_a_score}</div>
+          <div className={styles.scoreInfo}>
+            <div className={styles.score}>{match.team_a_score}</div>
+            {match.set_scores && match.set_scores.length > 0 && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                ({match.set_scores.map(s => s.a).join(', ')})
+              </div>
+            )}
+          </div>
         </div>
         
         <div className={styles.divider} />
@@ -151,7 +172,14 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
               <span className={styles.placeholder}>TBD</span>
             )}
           </div>
-          <div className={styles.score}>{match.team_b_score}</div>
+          <div className={styles.scoreInfo}>
+            <div className={styles.score}>{match.team_b_score}</div>
+            {match.set_scores && match.set_scores.length > 0 && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                ({match.set_scores.map(s => s.b).join(', ')})
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <div className={styles.connector} />

@@ -16,7 +16,17 @@ export async function GET() {
 
     if (error) throw error;
     
-    return NextResponse.json({ tournaments });
+    // Parse BO:X from description for each tournament
+    const processed = tournaments?.map(t => {
+      const boSplit = t.description?.split('BO:');
+      return {
+        ...t,
+        best_of: boSplit && boSplit.length > 1 ? parseInt(boSplit[1]) : 1,
+        description: boSplit?.[0]?.trim()
+      };
+    });
+
+    return NextResponse.json({ tournaments: processed });
   } catch (error) {
     console.error('Fetch tournaments error:', error);
     return NextResponse.json({ error: 'Lỗi lấy danh sách giải đấu' }, { status: 500 });
@@ -38,7 +48,7 @@ export async function POST(request: Request) {
 
     const { 
       name, description, type, match_mode, seeding_mode,
-      participants, group_count, advance_per_group 
+      participants, group_count, advance_per_group, best_of
     } = await request.json();
 
     // Validation
@@ -63,12 +73,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Step 1: Create the tournament
+    // Step 1: Create the tournament (using description hack for best_of)
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
       .insert([{
         name,
-        description,
+        description: `${description || ''}\n\nBO:${best_of || 1}`,
         type,
         match_mode: validMatchMode,
         seeding_mode: validSeedingMode,

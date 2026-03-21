@@ -59,8 +59,8 @@ export const ProfileMatchHistory: React.FC<ProfileMatchHistoryProps> = ({ matche
         if (isTeamA && match.team_a_score > match.team_b_score) isWinner = true;
         if (isTeamB && match.team_b_score > match.team_a_score) isWinner = true;
 
-        const myTeam = isTeamA ? match.team_a : match.team_b;
-        const oppTeam = isTeamA ? match.team_b : match.team_a;
+        const myTeam = isTeamA ? (match.team_a || []) : (match.team_b || []);
+        const oppTeam = isTeamA ? (match.team_b || []) : (match.team_a || []);
         const myScore = isTeamA ? match.team_a_score : match.team_b_score;
         const oppScore = isTeamA ? match.team_b_score : match.team_a_score;
         const canEdit = session && (session.isAdmin || session.id === match.created_by);
@@ -69,6 +69,9 @@ export const ProfileMatchHistory: React.FC<ProfileMatchHistoryProps> = ({ matche
           <div key={match.match_id} className={`${styles.matchRow} ${isWinner ? styles.winBg : isDraw ? '' : styles.lossBg}`}>
             <div className={styles.matchMeta}>
               <span className={styles.matchType}>{match.type === 'singles' ? '1v1' : '2v2'}</span>
+              <span className={styles.matchType} style={{ background: 'var(--bg-secondary)', color: 'var(--text-color)', marginLeft: '0.25rem' }}>
+                {!match.set_scores || match.set_scores.length === 0 ? 'BO1' : (match.set_scores.length > 3 ? 'BO5' : 'BO3')}
+              </span>
               <span className={styles.matchDate}>
                 <Calendar size={12} /> {formatDate(match.created_at)}
               </span>
@@ -94,22 +97,29 @@ export const ProfileMatchHistory: React.FC<ProfileMatchHistoryProps> = ({ matche
               )}
             </div>
 
-            <div className={styles.scoreBoard}>
-              <div className={styles.myTeam}>
-                {myTeam.map((p: any) => (
-                  <img key={p.id} title={p.name} className={styles.avatar} src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${p.avatar_url}`} alt={p.name} />
-                ))}
-                <span className={`${styles.score} ${isWinner ? styles.winScore : isDraw ? '' : styles.lossScore}`}>{myScore}</span>
-              </div>
+            <div className={styles.scoreBoard} style={{ flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                <div className={styles.myTeam}>
+                  {myTeam.map((p: any) => (
+                    <img key={p.id} title={p.name} className={styles.avatar} src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${p.avatar_url}`} alt={p.name} />
+                  ))}
+                  <span className={`${styles.score} ${isWinner ? styles.winScore : isDraw ? '' : styles.lossScore}`}>{myScore}</span>
+                </div>
 
-              <div className={styles.vs}>-</div>
+                <div className={styles.vs} style={{ margin: '0 1rem' }}>-</div>
 
-              <div className={styles.oppTeam}>
-                <span className={`${styles.score} ${!isWinner && !isDraw ? styles.winScore : isDraw ? '' : styles.lossScore}`}>{oppScore}</span>
-                {oppTeam.map((p: any) => (
-                  <img key={p.id} title={p.name} className={styles.avatar} src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${p.avatar_url}`} alt={p.name} />
-                ))}
+                <div className={styles.oppTeam}>
+                  <span className={`${styles.score} ${!isWinner && !isDraw ? styles.winScore : isDraw ? '' : styles.lossScore}`}>{oppScore}</span>
+                  {oppTeam.map((p: any) => (
+                    <img key={p.id} title={p.name} className={styles.avatar} src={`https://irwsevmjkrqhcwdbmyfo.supabase.co/storage/v1/object/public/avatars/${p.avatar_url}`} alt={p.name} />
+                  ))}
+                </div>
               </div>
+              {match.set_scores && match.set_scores.length > 0 && (
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', alignSelf: 'center' }}>
+                  ({match.set_scores.map((s:any) => isTeamA ? `${s.a}-${s.b}` : `${s.b}-${s.a}`).join(', ')})
+                </div>
+              )}
             </div>
           </div>
         );

@@ -31,6 +31,17 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
 
     if (error || !match) throw error || new Error('Not found');
 
+    // Fetch set scores natively if match_details view hasn't been updated
+    const { data: nativeMatch } = await supabase
+      .from('matches')
+      .select('set_scores')
+      .eq('id', params.id)
+      .single();
+
+    if (nativeMatch && nativeMatch.set_scores) {
+      match.set_scores = nativeMatch.set_scores;
+    }
+
     return NextResponse.json({ match });
   } catch (error) {
     return NextResponse.json({ error: 'Không tìm thấy trận đấu' }, { status: 404 });
@@ -68,15 +79,22 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
       return NextResponse.json({ error: 'Không có quyền chỉnh sửa' }, { status: 403 });
     }
 
-    const { type, team_a_score, team_b_score, team_a_players, team_b_players } = await request.json();
+    const { type, team_a_score, team_b_score, team_a_players, team_b_players, set_scores } = await request.json();
 
     // Validate
     if (!type || !['singles', 'doubles'].includes(type)) return NextResponse.json({ error: 'Sai loại trận' }, { status: 400 });
     if (typeof team_a_score !== 'number' || typeof team_b_score !== 'number') return NextResponse.json({ error: 'Sai điểm' }, { status: 400 });
 
+    // Clean up unplayed sets before mapping
+    let final_set_scores: any[] | null = null;
+    if (Array.isArray(set_scores) && set_scores.length > 0) {
+        final_set_scores = set_scores.filter(s => s.a > 0 || s.b > 0);
+        if (final_set_scores.length === 0) final_set_scores = null;
+    }
+
     // Cập nhật điểm trận đấu và lấy thông tin để xử lý progression
     const { data: fullMatch, error: matchError } = await supabase.from('matches')
-      .update({ team_a_score, team_b_score, updated_at: new Date().toISOString() })
+      .update({ team_a_score, team_b_score, set_scores: final_set_scores, updated_at: new Date().toISOString() })
       .eq('id', params.id)
       .select('tournament_id, next_match_id, match_order')
       .single();

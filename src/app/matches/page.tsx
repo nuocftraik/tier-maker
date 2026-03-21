@@ -14,6 +14,7 @@ export default function MatchesFeedPage() {
   const session = sessionData?.session;
 
   const [source, setSource] = React.useState('all');
+  const [matchFormat, setMatchFormat] = React.useState('all');
   const [selectedUser, setSelectedUser] = React.useState('');
 
   const { data: usersData } = useSWR('/api/users', fetcher);
@@ -21,7 +22,15 @@ export default function MatchesFeedPage() {
 
   const apiUrl = `/api/matches?limit=20&source=${source}${selectedUser ? `&user_id=${selectedUser}` : ''}`;
   const { data, error, isLoading, mutate } = useSWR(apiUrl, fetcher, { refreshInterval: 10000 });
-  const matches = data?.matches || [];
+  const rawMatches = data?.matches || [];
+
+  const matches = React.useMemo(() => {
+    return rawMatches.filter((match: any) => {
+      if (matchFormat === 'bo1') return !match.set_scores || match.set_scores.length === 0;
+      if (matchFormat === 'bo3') return match.set_scores && match.set_scores.length > 0;
+      return true;
+    });
+  }, [rawMatches, matchFormat]);
 
   const handleDelete = async (matchId: string) => {
     if (!confirm('Bạn có chắc chắn muốn xóa kết quả trận đấu này? Thao tác này không thể hoàn tác!')) return;
@@ -77,6 +86,21 @@ export default function MatchesFeedPage() {
             className={`${styles.filterBtn} ${source === 'tournament' ? styles.activeFilter : ''}`}
             onClick={() => setSource('tournament')}
           >Giải đấu</button>
+
+          <span style={{color:'var(--border-color)'}}>|</span>
+
+          <button 
+            className={`${styles.filterBtn} ${matchFormat === 'all' ? styles.activeFilter : ''}`}
+            onClick={() => setMatchFormat('all')}
+          >Tất cả ván</button>
+          <button 
+            className={`${styles.filterBtn} ${matchFormat === 'bo1' ? styles.activeFilter : ''}`}
+            onClick={() => setMatchFormat('bo1')}
+          >Chỉ BO1</button>
+          <button 
+            className={`${styles.filterBtn} ${matchFormat === 'bo3' ? styles.activeFilter : ''}`}
+            onClick={() => setMatchFormat('bo3')}
+          >Nhiều ván (BO3+)</button>
         </div>
 
         <div className={styles.searchGroup}>
@@ -117,6 +141,9 @@ export default function MatchesFeedPage() {
                     <span className={styles.matchType}>
                       {match.type === 'singles' ? '1 vs 1' : '2 vs 2'}
                     </span>
+                    <span className={styles.matchType} style={{ background: 'var(--bg-secondary)', color: 'var(--text-color)', border: '1px solid var(--border-color)' }}>
+                      {!match.set_scores || match.set_scores.length === 0 ? 'BO1' : (match.set_scores.length > 3 ? 'BO5' : 'BO3')}
+                    </span>
                     <span className={styles.matchDate}>
                       <Calendar size={14} /> {formatDate(match.created_at)}
                     </span>
@@ -129,9 +156,11 @@ export default function MatchesFeedPage() {
                       <Link href={`/matches/${match.match_id}/edit`} className={styles.actionBtnEdit} title="Sửa kết quả">
                         <Edit2 size={16} />
                       </Link>
-                      <button onClick={() => handleDelete(match.match_id)} className={styles.actionBtnDelete} title="Xóa trận đấu">
-                        <Trash2 size={16} />
-                      </button>
+                      {!match.tournament_id && (
+                        <button onClick={() => handleDelete(match.match_id)} className={styles.actionBtnDelete} title="Xóa trận đấu">
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -151,14 +180,21 @@ export default function MatchesFeedPage() {
                   </div>
 
                   {/* Central Score Area */}
-                  <div className={styles.scoreArea}>
-                    <div className={`${styles.scoreBox} ${isTeamAWinner ? styles.winnerScore : ''}`}>
-                      {match.team_a_score}
+                  <div className={styles.scoreArea} style={{ flexDirection: 'column', padding: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div className={`${styles.scoreBox} ${isTeamAWinner ? styles.winnerScore : ''}`}>
+                        {match.team_a_score}
+                      </div>
+                      <div className={styles.vsDivider}>-</div>
+                      <div className={`${styles.scoreBox} ${isTeamBWinner ? styles.winnerScore : ''}`}>
+                        {match.team_b_score}
+                      </div>
                     </div>
-                    <div className={styles.vsDivider}>-</div>
-                    <div className={`${styles.scoreBox} ${isTeamBWinner ? styles.winnerScore : ''}`}>
-                      {match.team_b_score}
-                    </div>
+                    {match.set_scores && match.set_scores.length > 0 && (
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 600 }}>
+                         ({match.set_scores.map((s:any) => `${s.a}-${s.b}`).join(', ')})
+                      </div>
+                    )}
                   </div>
 
                   {/* Team B Summary */}

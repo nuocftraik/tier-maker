@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/Button/Button';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { Bracket } from '@/components/tournament/Bracket';
 import { StandingsTable } from '@/components/tournament/StandingsTable';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { InlineScoreModal } from '@/components/tournament/InlineScoreModal';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 
@@ -48,6 +50,10 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [isStartModalOpen, setIsStartModalOpen] = useState(false);
+  const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [editingMatch, setEditingMatch] = useState<any>(null);
 
   // Filtered matches by stage
   const groupMatches = matches.filter((m: any) => m.stage === 'group');
@@ -62,8 +68,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   });
 
   const handleGenerateBracket = async () => {
-    if (!confirm('Bạn có muốn tạo vòng đấu ngay bây giờ? Sau khi tạo sẽ không thể thay đổi danh sách người chơi.')) return;
-    
     setIsGenerating(true);
     try {
       const res = await fetch(`/api/tournaments/${id}/generate-bracket`, { method: 'POST' });
@@ -78,8 +82,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   };
 
   const handleAdvanceToKnockout = async () => {
-    if (!confirm('Chuyển sang vòng loại trực tiếp? Hệ thống sẽ tính bảng xếp hạng vòng bảng và chọn người đi tiếp.')) return;
-    
     setIsAdvancing(true);
     try {
       const res = await fetch(`/api/tournaments/${id}/advance-knockout`, { method: 'POST' });
@@ -94,8 +96,6 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   };
 
   const handleDeleteTournament = async () => {
-    if (!confirm('BẠN CÓ CHẮC CHẮN MUỐN XÓA GIẢI ĐẤU NÀY? Thao tác này sẽ xóa toàn bộ trận đấu và kết quả liên quan.')) return;
-    
     try {
       const res = await fetch(`/api/tournaments/${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -150,9 +150,16 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     )) || 'TBD'}
                   </div>
                   <div className={styles.scoreContainer}>
-                    <div className={styles.score}>{match.team_a_score}</div>
-                    <div className={styles.scoreSeparator}>-</div>
-                    <div className={styles.score}>{match.team_b_score}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div className={styles.score}>{match.team_a_score}</div>
+                      <div className={styles.scoreSeparator}>-</div>
+                      <div className={styles.score}>{match.team_b_score}</div>
+                    </div>
+                    {match.set_scores && match.set_scores.length > 0 && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: 600 }}>
+                        ({match.set_scores.map((s:any) => `${s.a}-${s.b}`).join(', ')})
+                      </div>
+                    )}
                   </div>
                   <div className={styles.team} style={{ textAlign: 'right', flexDirection: 'row-reverse' }}>
                     {match.team_b?.map((p: any) => (
@@ -163,10 +170,10 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     )) || 'TBD'}
                   </div>
                 </div>
-                {tournament.status === 'active' && !tournament.winner_id && (
-                  <Link href={`/matches/new?tournament=${id}&match=${match.match_id}`} className={styles.recordBtn}>
-                    Ghi kết quả
-                  </Link>
+                {session?.isAdmin && tournament.status !== 'draft' && match.team_a?.length > 0 && match.team_b?.length > 0 && (
+                  <button onClick={() => setEditingMatch(match)} className={styles.recordBtn}>
+                    {match.team_a_score > 0 || match.team_b_score > 0 ? 'Sửa điểm' : 'Ghi kết quả'}
+                  </button>
                 )}
               </div>
             ))}
@@ -186,7 +193,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <h2>Sẵn sàng bắt đầu?</h2>
             <p>Giải đấu đang ở trạng thái nháp. Hãy kiểm tra danh sách người chơi bên cạnh và bấm nút bên dưới để tạo vòng đấu.</p>
             {session?.isAdmin && (
-              <Button onClick={handleGenerateBracket} disabled={isGenerating}>
+              <Button onClick={() => setIsStartModalOpen(true)} disabled={isGenerating}>
                 <Swords size={18} />
                 {isGenerating ? 'Đang tạo vòng đấu...' : 'Tạo vòng đấu & Bắt đầu'}
               </Button>
@@ -202,7 +209,12 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
           {tournament?.type === 'elimination' && (
             <>
               <h2 className={styles.sectionTitle}>Sơ đồ thi đấu</h2>
-              <Bracket matches={matches} tournamentId={id} />
+              <Bracket 
+                matches={matches} 
+                tournamentId={id} 
+                canEdit={session?.isAdmin && tournament.status !== 'draft'} 
+                onMatchClick={(m: any) => setEditingMatch(m)} 
+              />
             </>
           )}
           {tournament?.type === 'round_robin' && (
@@ -248,7 +260,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             {/* Advance button */}
             {tournament.current_stage === 'group' && session?.isAdmin && (
               <div className={styles.advanceSection}>
-                <Button onClick={handleAdvanceToKnockout} disabled={isAdvancing}>
+                <Button onClick={() => setIsAdvanceModalOpen(true)} disabled={isAdvancing}>
                   <ArrowRightCircle size={18} />
                   {isAdvancing ? 'Đang xử lý...' : `Chuyển sang Vòng Knockout (Top ${tournament.advance_per_group}/bảng)`}
                 </Button>
@@ -265,7 +277,12 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                   <span className={styles.currentStageBadge}>Đang diễn ra</span>
                 )}
               </div>
-              <Bracket matches={knockoutMatches} tournamentId={id} />
+              <Bracket 
+                matches={knockoutMatches} 
+                tournamentId={id} 
+                canEdit={session?.isAdmin && tournament.status !== 'draft'} 
+                onMatchClick={(m: any) => setEditingMatch(m)} 
+              />
             </div>
           )}
         </div>
@@ -296,7 +313,8 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
               <p className={styles.meta}>
                 <Calendar size={14} /> Tạo ngày {tournament && formatDate(tournament.created_at)} • 
                 <Medal size={14} /> {getTypeLabel(tournament?.type)} •
-                {tournament?.match_mode === 'doubles' ? ' 🏸🏸 Đôi (2v2)' : ' 🏸 Đơn (1v1)'}
+                {tournament?.match_mode === 'doubles' ? ' 🏸🏸 Đôi (2v2)' : ' 🏸 Đơn (1v1)'} •
+                <strong> BO {tournament?.best_of || 1}</strong>
               </p>
             </div>
           </div>
@@ -308,7 +326,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                   <Pencil size={18} /> Sửa
                 </Link>
               )}
-              <button onClick={handleDeleteTournament} className={styles.deleteBtn}>
+              <button onClick={() => setIsDeleteModalOpen(true)} className={styles.deleteBtn}>
                 <Trash2 size={18} /> Xóa
               </button>
             </div>
@@ -470,6 +488,45 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
           </aside>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={isStartModalOpen}
+        onClose={() => setIsStartModalOpen(false)}
+        onConfirm={handleGenerateBracket}
+        title="Bắt đầu Giải đấu"
+        message="Hệ thống sẽ tạo sơ đồ thi đấu dựa trên danh sách vận động viên. Bạn sẽ không thể thay đổi người tham gia sau thao tác này."
+        confirmLabel="Tạo & Bắt đầu"
+      />
+
+      <ConfirmModal
+        isOpen={isAdvanceModalOpen}
+        onClose={() => setIsAdvanceModalOpen(false)}
+        onConfirm={handleAdvanceToKnockout}
+        title="Chuyển sang Vòng Loại"
+        message="Hành động này sẽ kết thúc vòng bảng, tính toán điểm số và chọn các đội đứng đầu để vào vòng KO. Bạn chắc chứ?"
+        confirmLabel="Tiến tới Knockout"
+        isDanger={true}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteTournament}
+        title="Xóa Giải đấu"
+        isDanger={true}
+        message="BẠN CÓ CHẮC CHẮN? Toàn bộ trận đấu, tỉ số và dữ liệu giải đấu sẽ biến mất vĩnh viễn khỏi hệ thống."
+        confirmLabel="Xóa vĩnh viễn"
+      />
+
+      {editingMatch && (
+        <InlineScoreModal
+          match={editingMatch}
+          tournament={tournament}
+          isOpen={true}
+          onClose={() => setEditingMatch(null)}
+          onSuccess={() => { mutate(); }}
+        />
+      )}
     </div>
   );
 }

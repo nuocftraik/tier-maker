@@ -34,6 +34,25 @@ function MatchForm() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [setScores, setSetScores] = useState<{a: number, b: number}[]>(Array(5).fill({a: 0, b: 0}));
+  const [manualBestOf, setManualBestOf] = useState<number>(1);
+
+  const bestOf = tournamentData?.tournament?.best_of || manualBestOf;
+  const isMultiSet = bestOf > 1;
+
+  // Compute overall score from sets if bestOf > 1
+  React.useEffect(() => {
+    if (isMultiSet && initialLoaded) {
+      let aWins = 0;
+      let bWins = 0;
+      setScores.slice(0, bestOf).forEach(set => {
+         if (set.a > set.b) aWins++;
+         else if (set.b > set.a) bWins++;
+      });
+      setScoreA(aWins);
+      setScoreB(bWins);
+    }
+  }, [setScores, isMultiSet, bestOf, initialLoaded]);
 
   // Sync with fetched data
   React.useEffect(() => {
@@ -44,6 +63,14 @@ function MatchForm() {
       setScoreA(match.team_a_score || 0);
       setScoreB(match.team_b_score || 0);
       setType(match.type === 'doubles' ? 'doubles' : 'singles');
+      if (match.set_scores && match.set_scores.length > 0) {
+        setManualBestOf(match.set_scores.length <= 3 ? 3 : 5);
+        const newSets = Array(5).fill({a: 0, b: 0});
+        match.set_scores.forEach((s: any, i: number) => {
+          if (i < 5) newSets[i] = {a: s.a || 0, b: s.b || 0};
+        });
+        setSetScores(newSets);
+      }
       setInitialLoaded(true);
     } else if (tournamentData?.tournament && !initialLoaded) {
       setType(tournamentData.tournament.match_mode === 'doubles' ? 'doubles' : 'singles');
@@ -79,6 +106,12 @@ function MatchForm() {
     return team === 'A' ? teamA.includes(userId) : teamB.includes(userId);
   };
 
+  const updateSetScore = (index: number, team: 'a'|'b', val: number) => {
+    const newSets = [...setScores];
+    newSets[index] = { ...newSets[index], [team]: val };
+    setSetScores(newSets);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -88,6 +121,18 @@ function MatchForm() {
     if (teamA.length !== requiredPlayers || teamB.length !== requiredPlayers) {
       setErrorMessage(`Vui lòng chọn đủ ${requiredPlayers} người mỗi đội!`);
       return;
+    }
+
+    // Best of validation
+    if (isMultiSet) {
+      const winsToWin = Math.ceil(bestOf / 2);
+      const isAValid = scoreA === winsToWin && scoreB < winsToWin;
+      const isBValid = scoreB === winsToWin && scoreA < winsToWin;
+      
+      if (!isAValid && !isBValid) {
+        setErrorMessage(`Trận đấu BO${bestOf} này yêu cầu một đội đạt ${winsToWin} ván thắng để kết thúc. Hiện đang là ${scoreA}-${scoreB}. Vui lòng nhập chi tiết điểm các ván bên dưới.`);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -103,7 +148,8 @@ function MatchForm() {
           team_a_score: scoreA,
           team_b_score: scoreB,
           team_a_players: teamA,
-          team_b_players: teamB
+          team_b_players: teamB,
+          set_scores: isMultiSet ? setScores.slice(0, bestOf) : undefined
         })
       });
       const data = await res.json();
@@ -161,6 +207,38 @@ function MatchForm() {
             </div>
           </div>
 
+          {!matchId && !tournamentId && (
+            <div className={styles.section} style={{ marginTop: '1rem' }}>
+              <label className={styles.label}>Số ván thi đấu</label>
+              <div className={`${styles.typeSelector}`}>
+                <button
+                  type="button"
+                  className={`${styles.typeBtn} ${manualBestOf === 1 ? styles.activeType : ''}`}
+                  onClick={() => setManualBestOf(1)}
+                  style={{ gap: '0.5rem', padding: '0.5rem 1rem' }}
+                >
+                  Giao hữu (BO1)
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.typeBtn} ${manualBestOf === 3 ? styles.activeType : ''}`}
+                  onClick={() => setManualBestOf(3)}
+                  style={{ gap: '0.5rem', padding: '0.5rem 1rem' }}
+                >
+                  Chuyên nghiệp (BO3)
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.typeBtn} ${manualBestOf === 5 ? styles.activeType : ''}`}
+                  onClick={() => setManualBestOf(5)}
+                  style={{ gap: '0.5rem', padding: '0.5rem 1rem' }}
+                >
+                  Siêu kinh điển (BO5)
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className={styles.teamsGrid}>
             {/* Team A */}
             <div className={styles.teamBox}>
@@ -173,9 +251,12 @@ function MatchForm() {
                   value={scoreA}
                   onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
                   className={styles.scoreInput}
-                  style={{ borderColor: scoreA > scoreB ? '#ef4444' : 'var(--border-color)' }}
+                  style={{ borderColor: scoreA > scoreB ? '#ef4444' : 'var(--border-color)', opacity: isMultiSet ? 0.6 : 1 }}
+                  readOnly={isMultiSet}
                 />
-                <span className={styles.scoreLabel}>Tỉ số</span>
+                <span className={styles.scoreLabel}>
+                  {isMultiSet ? `Số ván thắng (BO${bestOf})` : 'Tỉ số'}
+                </span>
               </div>
               
               <div className={styles.playerSelection}>
@@ -215,9 +296,12 @@ function MatchForm() {
                   value={scoreB}
                   onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
                   className={styles.scoreInput}
-                  style={{ borderColor: scoreB > scoreA ? '#3b82f6' : 'var(--border-color)' }}
+                  style={{ borderColor: scoreB > scoreA ? '#3b82f6' : 'var(--border-color)', opacity: isMultiSet ? 0.6 : 1 }}
+                  readOnly={isMultiSet}
                 />
-                <span className={styles.scoreLabel}>Tỉ số</span>
+                <span className={styles.scoreLabel}>
+                  {isMultiSet ? `Số ván thắng (BO${bestOf})` : 'Tỉ số'}
+                </span>
               </div>
               
               <div className={styles.playerSelection}>
@@ -243,6 +327,39 @@ function MatchForm() {
               </div>
             </div>
           </div>
+
+          {isMultiSet && (
+            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+               <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-color)', marginBottom: '1.5rem', textAlign: 'center' }}>
+                 Điểm chi tiết từng Ván (Tối đa {bestOf} ván)
+               </h3>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                 {Array.from({length: bestOf}).map((_, i) => (
+                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                     <span style={{ fontWeight: 600, color: 'var(--text-muted)', width: '60px' }}>Ván {i + 1}</span>
+                     <input 
+                       type="number" 
+                       min="0" 
+                       value={setScores[i]?.a || ''} 
+                       onChange={(e) => updateSetScore(i, 'a', parseInt(e.target.value) || 0)} 
+                       style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #ef4444', borderRadius: '8px', background: 'var(--background)' }} 
+                     />
+                     <span style={{ fontWeight: 'bold', color: 'var(--text-color)' }}>-</span>
+                     <input 
+                       type="number" 
+                       min="0" 
+                       value={setScores[i]?.b || ''} 
+                       onChange={(e) => updateSetScore(i, 'b', parseInt(e.target.value) || 0)} 
+                       style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #3b82f6', borderRadius: '8px', background: 'var(--background)' }} 
+                     />
+                   </div>
+                 ))}
+               </div>
+               <p style={{ textAlign: 'center', marginTop: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                 Tỉ số chung cuộc ({scoreA} - {scoreB}) được tự động tính dựa trên số ván thắng. Điền 0-0 để bỏ qua ván chưa đấu.
+               </p>
+            </div>
+          )}
 
           {errorMessage && <div className={styles.errorAlert}>{errorMessage}</div>}
 

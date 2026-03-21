@@ -34,7 +34,8 @@ export default function EditTournamentPage({ params }: { params: Promise<{ id: s
     match_mode: 'singles',
     seeding_mode: 'random',
     group_count: 2,
-    advance_per_group: 1
+    advance_per_group: 1,
+    best_of: 1
   });
   
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
@@ -57,7 +58,8 @@ export default function EditTournamentPage({ params }: { params: Promise<{ id: s
         match_mode: t.match_mode,
         seeding_mode: t.seeding_mode,
         group_count: t.group_count || 2,
-        advance_per_group: t.advance_per_group || 1
+        advance_per_group: t.advance_per_group || 1,
+        best_of: t.best_of || 1
       });
       // Participant IDs
       const pIds = (tourneyData.participants || []).map((p: any) => p.user_id);
@@ -210,6 +212,19 @@ export default function EditTournamentPage({ params }: { params: Promise<{ id: s
                   >
                     <option value="random">🎲 Ngẫu nhiên</option>
                     <option value="manual">✋ Tự sắp xếp</option>
+                  </select>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                  <label className={styles.label}>Số ván thắng (Best of)</label>
+                  <select 
+                    className={styles.select}
+                    value={formData.best_of}
+                    onChange={e => setFormData({...formData, best_of: +e.target.value})}
+                  >
+                    <option value={1}>⚡ BO1 (Đánh 1 ván)</option>
+                    <option value={3}>🔥 BO3 (Đánh 3 thắng 2)</option>
+                    <option value={5}>🏆 BO5 (Đánh 5 thắng 3)</option>
                   </select>
                 </div>
 

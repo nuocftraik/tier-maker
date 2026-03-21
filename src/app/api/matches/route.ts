@@ -51,6 +51,24 @@ export async function GET(request: Request) {
 
     if (error) throw error;
     
+    // Fetch set scores natively
+    if (matches && matches.length > 0) {
+      const matchIds = matches.map((m: any) => m.match_id);
+      const { data: nativeMatches } = await supabase
+        .from('matches')
+        .select('id, set_scores')
+        .in('id', matchIds);
+
+      if (nativeMatches && nativeMatches.length > 0) {
+        matches.forEach((m: any) => {
+           const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
+           if (nativeM && nativeM.set_scores) {
+               m.set_scores = nativeM.set_scores;
+           }
+        });
+      }
+    }
+
     return NextResponse.json({ matches });
   } catch (error) {
     console.error('Fetch matches error:', error);
@@ -71,7 +89,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
     }
 
-    const { type, team_a_score, team_b_score, team_a_players, team_b_players } = await request.json();
+    const { type, team_a_score, team_b_score, team_a_players, team_b_players, set_scores } = await request.json();
 
     if (!type || !['singles', 'doubles'].includes(type)) {
       return NextResponse.json({ error: 'Loại trận đấu không hợp lệ' }, { status: 400 });
@@ -85,6 +103,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Danh sách người chơi không hợp lệ' }, { status: 400 });
     }
 
+    // Clean up unplayed sets before mapping
+    let final_set_scores: any[] | null = null;
+    if (Array.isArray(set_scores) && set_scores.length > 0) {
+        final_set_scores = set_scores.filter(s => s.a > 0 || s.b > 0);
+        if (final_set_scores.length === 0) final_set_scores = null;
+    }
+
     // Insert the match
     const { data: match, error: matchError } = await supabase
       .from('matches')
@@ -92,6 +117,7 @@ export async function POST(request: Request) {
         type,
         team_a_score,
         team_b_score,
+        set_scores: final_set_scores,
         created_by: session.id || null
       }])
       .select('id')

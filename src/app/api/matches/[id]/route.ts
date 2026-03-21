@@ -34,12 +34,14 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     // Fetch set scores natively if match_details view hasn't been updated
     const { data: nativeMatch } = await supabase
       .from('matches')
-      .select('set_scores')
+      .select('set_scores, best_of, is_bye')
       .eq('id', params.id)
       .single();
 
-    if (nativeMatch && nativeMatch.set_scores) {
-      match.set_scores = nativeMatch.set_scores;
+    if (nativeMatch) {
+      if (nativeMatch.set_scores) match.set_scores = nativeMatch.set_scores;
+      if (nativeMatch.best_of) match.best_of = nativeMatch.best_of;
+      if (nativeMatch.is_bye !== undefined) match.is_bye = nativeMatch.is_bye;
     }
 
     return NextResponse.json({ match });
@@ -114,7 +116,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
     const { data: fullMatch, error: matchError } = await supabase.from('matches')
       .update({ team_a_score, team_b_score, set_scores: final_set_scores, updated_at: new Date().toISOString() })
       .eq('id', params.id)
-      .select('tournament_id, next_match_id, match_order')
+      .select('tournament_id, next_match_id, match_order, stage')
       .single();
 
     if (matchError || !fullMatch) throw matchError || new Error('Không thể cập nhật trận đấu');
@@ -151,9 +153,7 @@ export async function PUT(request: Request, props: { params: Promise<{ id: strin
           if (insError) console.error('Advance Winner Error:', insError);
         } else {
           // Final match logic
-          const { data: tournament } = await supabase.from('tournaments').select('type').eq('id', fullMatch.tournament_id).single();
-          if (tournament?.type === 'elimination' || (tournament?.type === 'custom' && !fullMatch.next_match_id)) {
-             // Only update status to completed, as winner_id might not exist in tournaments table either
+          if (fullMatch.stage === 'knockout' && !fullMatch.next_match_id) {
              await supabase.from('tournaments')
                .update({ status: 'completed' })
                .eq('id', fullMatch.tournament_id);

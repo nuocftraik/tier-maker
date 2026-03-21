@@ -16,13 +16,12 @@ export async function GET() {
 
     if (error) throw error;
     
-    // Parse BO:X from description for each tournament
+    // Parse format_config from tournament
     const processed = tournaments?.map(t => {
-      const boSplit = t.description?.split('BO:');
+      const config = t.format_config || {};
       return {
         ...t,
-        best_of: boSplit && boSplit.length > 1 ? parseInt(boSplit[1]) : 1,
-        description: boSplit?.[0]?.trim()
+        best_of: config.knockout_bo || t.best_of || 1
       };
     });
 
@@ -48,7 +47,7 @@ export async function POST(request: Request) {
 
     const { 
       name, description, type, match_mode, seeding_mode,
-      participants, group_count, advance_per_group, best_of
+      participants, group_count, advance_per_group, best_of, format_config
     } = await request.json();
 
     // Validation
@@ -73,12 +72,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Step 1: Create the tournament (using description hack for best_of)
+    // Step 1: Create the tournament
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
       .insert([{
         name,
-        description: `${description || ''}\n\nBO:${best_of || 1}`,
+        description,
         type,
         match_mode: validMatchMode,
         seeding_mode: validSeedingMode,
@@ -86,6 +85,7 @@ export async function POST(request: Request) {
         group_count: type === 'custom' ? group_count : 0,
         advance_per_group: type === 'custom' ? advance_per_group : 0,
         current_stage: type === 'custom' ? 'group' : null,
+        format_config: format_config || { knockout_bo: best_of || 3, final_bo: best_of === 1 ? 1 : 5, group_bo: 1 },
         created_by: session.id
       }])
       .select('id')

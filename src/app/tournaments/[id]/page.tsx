@@ -58,6 +58,18 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   // Filtered matches by stage
   const groupMatches = matches.filter((m: any) => m.stage === 'group');
   const knockoutMatches = matches.filter((m: any) => m.stage === 'knockout');
+  
+  const [activeTab, setActiveTab] = useState<'group' | 'knockout'>('group');
+
+  React.useEffect(() => {
+    if (tournament?.current_stage) {
+      setActiveTab(tournament.current_stage as 'group' | 'knockout');
+    }
+  }, [tournament?.current_stage]);
+  
+  const isGroupStageComplete = groupMatches.length > 0 && groupMatches.every((m: any) => 
+    m.team_a_score > 0 || m.team_b_score > 0 || (m.set_scores && m.set_scores.length > 0) || m.is_bye
+  );
 
   // Group participants by group_number
   const groups: Record<number, any[]> = {};
@@ -78,13 +90,61 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
       alert(err.message);
     } finally {
       setIsGenerating(false);
+      setIsStartModalOpen(false);
     }
+  };
+
+  const getAdvancingParticipants = () => {
+      const advancing: any[] = [];
+      Object.keys(groups).filter(g => Number(g) > 0).forEach(g => {
+        const groupNum = Number(g);
+        const groupPlayers = groups[groupNum] || [];
+        const gMatches = groupMatches.filter((m: any) => m.group_number === groupNum && (m.team_a_score > 0 || m.team_b_score > 0));
+        
+        const stats = groupPlayers.map((p: any) => {
+           let pts = 0;
+           gMatches.forEach((m: any) => {
+               const isTeamA = m.team_a?.some((x:any) => x.id === p.user.id);
+               const isTeamB = m.team_b?.some((x:any) => x.id === p.user.id);
+               if (isTeamA && m.team_a_score > m.team_b_score) pts += 3;
+               if (isTeamB && m.team_b_score > m.team_a_score) pts += 3;
+           });
+           return { ...p, pts };
+        });
+        
+        stats.sort((a,b) => b.pts - a.pts);
+        advancing.push(...stats.slice(0, tournament.advance_per_group));
+      });
+
+      return advancing.map((p, idx) => ({
+        user_id: p.user_id,
+        seed: idx + 1,
+        group_number: p.group_number
+      }));
   };
 
   const handleAdvanceToKnockout = async () => {
     setIsAdvancing(true);
     try {
-      const res = await fetch(`/api/tournaments/${id}/advance-knockout`, { method: 'POST' });
+      const advancingPayload = getAdvancingParticipants();
+      
+      const res = await fetch(`/api/tournaments/${id}/generate-bracket`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+           stage: 'knockout',
+           advancingParticipants: advancingPayload
+        })
+      });
+
+      if (res.ok) {
+        await fetch(`/api/tournaments/${id}`, {
+           method: 'PATCH',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ current_stage: 'knockout' })
+        });
+      }
+
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || 'Lỗi chuyển vòng');
       mutate();
@@ -92,6 +152,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
       alert(err.message);
     } finally {
       setIsAdvancing(false);
+      setIsAdvanceModalOpen(false);
     }
   };
 
@@ -234,9 +295,27 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
     if (tournament?.type === 'custom') {
       return (
         <div className={styles.customLayout}>
+          {/* Tabs */}
+          <div className={styles.stageTabs}>
+            <button 
+              onClick={() => setActiveTab('group')} 
+              className={`${styles.stageTab} ${activeTab === 'group' ? styles.activeTab : ''}`}
+            >
+              Vòng bảng
+            </button>
+            <button 
+              onClick={() => setActiveTab('knockout')} 
+              className={`${styles.stageTab} ${activeTab === 'knockout' ? styles.activeTab : ''}`}
+              disabled={knockoutMatches.length === 0}
+            >
+              Vòng Knockout
+            </button>
+          </div>
+
           {/* Group Stage */}
-          <div>
-            <div className={styles.stageHeader}>
+          {activeTab === 'group' && (
+            <div>
+              <div className={styles.stageHeader}>
               <h2 className={styles.sectionTitle}>🔄 Vòng bảng</h2>
               {tournament.current_stage === 'group' && (
                 <span className={styles.currentStageBadge}>Đang diễn ra</span>
@@ -249,7 +328,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
               return (
                 <div key={groupNum} className={styles.groupSection}>
                   <h3 className={styles.groupTitle}>Bảng {String.fromCharCode(64 + groupNum)}</h3>
-                  <StandingsTable participants={groupPlayers} matches={gMatches} matchMode={tournament.match_mode} />
+                  <StandingsTable participants={groupPlayers} matches={gMatches} matchMode={tournament.match_mode} advanceCount={tournament.advance_per_group} />
                   <div className={styles.groupMatchesPreview}>
                     {renderRoundMatches(gMatches)}
                   </div>
@@ -260,16 +339,25 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             {/* Advance button */}
             {tournament.current_stage === 'group' && session?.isAdmin && (
               <div className={styles.advanceSection}>
-                <Button onClick={() => setIsAdvanceModalOpen(true)} disabled={isAdvancing}>
+                <Button 
+                  onClick={() => setIsAdvanceModalOpen(true)} 
+                  disabled={isAdvancing || !isGroupStageComplete}
+                >
                   <ArrowRightCircle size={18} />
                   {isAdvancing ? 'Đang xử lý...' : `Chuyển sang Vòng Knockout (Top ${tournament.advance_per_group}/bảng)`}
                 </Button>
+                {!isGroupStageComplete && (
+                  <p style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    *Cần hoàn tất tất cả các trận Vòng bảng để đi tiếp
+                  </p>
+                )}
               </div>
             )}
           </div>
+          )}
 
           {/* Knockout Stage */}
-          {knockoutMatches.length > 0 && (
+          {activeTab === 'knockout' && knockoutMatches.length > 0 && (
             <div>
               <div className={styles.stageHeader}>
                 <h2 className={styles.sectionTitle}>🏆 Vòng loại trực tiếp</h2>
@@ -357,9 +445,10 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                   <h2 className={styles.winnerTitle}>🏆 NHÀ VÔ ĐỊCH 🏅</h2>
                   <div className={styles.winnerInfo}>
                     {(() => {
-                      const finalMatch = matches.find((m: any) => 
-                        (m.round_number === Math.max(...matches.map((x: any) => x.round_number))) &&
-                        m.stage === (tournament.type === 'custom' ? 'knockout' : m.stage) &&
+                      const relevantMatches = tournament.type === 'custom' ? knockoutMatches : matches;
+                      const maxRound = relevantMatches.length > 0 ? Math.max(...relevantMatches.map((x: any) => x.round_number)) : 0;
+                      const finalMatch = relevantMatches.find((m: any) => 
+                        m.round_number === maxRound &&
                         (m.team_a_score > 0 || m.team_b_score > 0)
                       );
                       
@@ -433,10 +522,9 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     // 1st: Tournament Winner
                     // 2nd: Final Loser
                     // 3rd: Semi-final Losers (tied or pick one)
-                    const finalMatch = matches.find((m: any) => 
-                      m.round_number === Math.max(...matches.map((x: any) => x.round_number)) &&
-                      m.stage === (tournament.type === 'custom' ? 'knockout' : m.stage)
-                    );
+                    const relevantMatches = tournament?.type === 'custom' ? knockoutMatches : matches;
+                    const maxRound = relevantMatches.length > 0 ? Math.max(...relevantMatches.map((x: any) => x.round_number)) : 0;
+                    const finalMatch = relevantMatches.find((m: any) => m.round_number === maxRound);
                     
                     const champion = finalMatch?.team_a_score > finalMatch?.team_b_score ? finalMatch?.team_a : finalMatch?.team_b;
                     const runnerUp = finalMatch?.team_a_score > finalMatch?.team_b_score ? finalMatch?.team_b : finalMatch?.team_a;

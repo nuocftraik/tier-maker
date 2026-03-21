@@ -22,9 +22,10 @@ interface StandingsProps {
   participants: any[];
   matches: Match[];
   matchMode?: 'singles' | 'doubles';
+  advanceCount?: number;
 }
 
-export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches, matchMode }) => {
+export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches, matchMode, advanceCount }) => {
   const isDoubles = matchMode === 'doubles';
 
   // Define entities (Individual or Team)
@@ -102,8 +103,10 @@ export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches
           </tr>
         </thead>
         <tbody>
-          {sortedStats.map((stat, idx) => (
-            <tr key={stat.id} className={idx === 0 ? styles.topRow : ''}>
+          {sortedStats.map((stat, idx) => {
+            const isAdvancing = advanceCount !== undefined && idx < advanceCount;
+            return (
+            <tr key={stat.id} className={`${idx === 0 ? styles.topRow : ''} ${isAdvancing ? styles.advancingRow : ''}`}>
               <td>{idx + 1} {idx === 0 && <Trophy size={14} className={styles.trophy} />}</td>
               <td className={styles.userCell}>
                 <div className={styles.avatarGroup}>
@@ -115,9 +118,15 @@ export const StandingsTable: React.FC<StandingsProps> = ({ participants, matches
               </td>
               <td className={styles.winCount}>{stat.wins}</td>
               <td className={styles.lossCount}>{stat.losses}</td>
-              <td>{stat.ptsFor - stat.ptsAgainst}</td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {stat.ptsFor - stat.ptsAgainst}
+                  {isAdvancing && <span className={styles.advanceTag}>Tới Knockout</span>}
+                </div>
+              </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

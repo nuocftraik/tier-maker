@@ -22,10 +22,15 @@ export async function GET(
     if (tournamentError) throw tournamentError;
     if (!tournament) return NextResponse.json({ error: 'Không tìm thấy giải đấu' }, { status: 404 });
 
-    // Parse Best of from description hack
+    // Parse from format_config
+    const config = tournament.format_config || {};
+    tournament.best_of = config.knockout_bo || tournament.best_of || 1;
+    
+    // Legacy cleanup
     const boSplit = tournament.description?.split('BO:');
-    tournament.best_of = boSplit && boSplit.length > 1 ? parseInt(boSplit[1]) : 1;
-    tournament.description = boSplit?.[0]?.trim();
+    if (boSplit && boSplit.length > 1) {
+       tournament.description = boSplit[0].trim();
+    }
 
     // 2. Fetch tournament participants
     const { data: participants, error: participantError } = await supabase
@@ -33,6 +38,7 @@ export async function GET(
       .select(`
         user_id,
         seed,
+        group_number,
         user:users!user_id(id, name, avatar_url)
       `)
       .eq('tournament_id', id)
@@ -55,14 +61,16 @@ export async function GET(
       const parentIds = matches.map((m: any) => m.match_id);
       const { data: nativeMatches } = await supabase
         .from('matches')
-        .select('id, set_scores')
+        .select('id, set_scores, best_of, is_bye')
         .in('id', parentIds);
 
       if (nativeMatches && nativeMatches.length > 0) {
         matches.forEach((m: any) => {
            const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
-           if (nativeM && nativeM.set_scores) {
+           if (nativeM) {
                m.set_scores = nativeM.set_scores;
+               if (nativeM.best_of) m.best_of = nativeM.best_of;
+               if (nativeM.is_bye !== undefined) m.is_bye = nativeM.is_bye;
            }
         });
       }
@@ -132,6 +140,44 @@ export async function PUT(
     return NextResponse.json({ message: 'Đã cập nhật giải đấu' });
   } catch (error: any) {
     console.error('Update tournament error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  props: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await props.params;
+    const body = await request.json();
+    
+    // Auth Check
+    const { isAdmin, error: authErr } = await checkAdmin();
+    if (authErr || !isAdmin) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+
+    const allowedUpdates = ['current_stage', 'status'];
+    const updateData: any = {};
+    for (const key of allowedUpdates) {
+       if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    
+    if (Object.keys(updateData).length === 0) {
+       return NextResponse.json({ error: 'Không có dữ liệu hợp lệ để cập nhật' }, { status: 400 });
+    }
+    
+    updateData.updated_at = new Date().toISOString();
+
+    const { error: updateError } = await supabase
+      .from('tournaments')
+      .update(updateData)
+      .eq('id', id);
+
+    if (updateError) throw updateError;
+
+    return NextResponse.json({ message: 'Đã cập nhật trạng thái giải đấu' });
+  } catch (error: any) {
+    console.error('PATCH tournament error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

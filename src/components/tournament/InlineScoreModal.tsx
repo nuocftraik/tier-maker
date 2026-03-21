@@ -17,7 +17,7 @@ export const InlineScoreModal: React.FC<InlineScoreModalProps> = ({ match, tourn
   const [submitting, setSubmitting] = useState(false);
   const [errorMSG, setErrorMSG] = useState('');
 
-  const bestOf = tournament?.best_of || 1;
+  const bestOf = match?.best_of || tournament?.best_of || 1;
   const isMultiSet = bestOf > 1;
 
   useEffect(() => {

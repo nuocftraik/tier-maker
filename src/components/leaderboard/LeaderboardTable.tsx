@@ -49,7 +49,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
 
             return (
               <motion.div
-                key={player.user_id}
+                key={player.user_id || player.id}
                 layout
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -61,7 +61,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   {isUnranked ? '-' : player.rank}
                 </div>
                 
-                <Link href={`/profile/${player.user_id}`} className={styles.colPlayer} style={{ textDecoration: 'none' }}>
+                <Link href={`/profile/${player.user_id || player.id}`} className={styles.colPlayer} style={{ textDecoration: 'none' }}>
                   <div className={styles.avatarWrapper}>
                     {hasCrown && <Crown className={styles.crownIcon} size={16} strokeWidth={3} />}
                     <Avatar 

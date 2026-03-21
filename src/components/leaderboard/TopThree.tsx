@@ -36,13 +36,13 @@ export const TopThree: React.FC<TopThreeProps> = ({ topPlayers, sTierSettings })
 
           return (
             <motion.div
-              key={player.user_id}
+              key={player.user_id || player.id}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
               className={`${styles.podiumItem} ${placeClass}`}
             >
-              <Link href={`/profile/${player.user_id}`} className={styles.profileLink}>
+              <Link href={`/profile/${player.user_id || player.id}`} className={styles.profileLink}>
                 <div className={styles.avatarWrapper}>
                   {showCrown && <Crown className={styles.crownIcon} size={32} strokeWidth={2.5} />}
                   <Avatar

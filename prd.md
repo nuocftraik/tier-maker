@@ -124,16 +124,35 @@ An admin logs in with admin password → manages members, changes access code, a
 
 ### 7.6 Admin Panel
 - CRUD members
-- Change access code
+- Change access code (Current: Admin passwords and access codes are displayed in plain text)
 - Manual tier/ranking adjustments
 - Admin permission management
 
 ### 7.7 UI/UX
 - Responsive (mobile-first + desktop)
 - Dark mode
-- Bilingual (Vietnamese + English)
+- Bilingual (Vietnamese + English) - Current: Only navigation links are translated; core content is locked to Vietnamese.
 - Modern animations and transitions
-- Hover effects, particle effects for S-tier
+  - Hover effects, particle effects for S-tier
+
+### 7.8 Match History & Tracking (Phase 8 - Implemented)
+- Record game results (Singles & Doubles)
+- Match history feed for global and individual players
+- Match recording UI dynamically supports BO1, BO3, and BO5 formats by revealing separate input fields for each set.
+- History feed displays Best Of format tags (BO1, BO3, BO5) along with detailed per-set scores inside parentheses.
+- Match editing and deletion functionalities are strictly restricted to Administrators and the match creator.
+- Player match statistics (Win/Loss ratio)
+- *Observed Issue*: Currently allows selecting the identical player for both Team A and Team B.
+- *Observed Issue*: Score inputs permit numerical strings with leading zeros (e.g., "018").
+
+### 7.9 Tournament Features (Phase 11 - Implemented)
+- Organize club tournaments (Single Elimination, Round Robin, Custom)
+- Support for detailed Best Of configurations (BO1, BO3, BO5) selected via a dedicated dropdown during setup (data saved via description field workaround).
+- Automatic bracket generation and match progression logic linking directly to Match History.
+- Custom confirmation modals for critical actions, including pre-flight summaries before Tournament Creation and Start phases.
+- Finalized tournament history highlighting the winner with a prominent Champion badge (🏆 NHÀ VÔ ĐỊCH 🏆).
+- Standings table and past bracket inspection.
+- *Observed Issue*: Player profile links from the tournament bracket occasionally route to 'undefined' IDs.
 
 ---
 
@@ -149,14 +168,12 @@ An admin logs in with admin password → manages members, changes access code, a
 
 ## 9. Future Scope (Post-MVP, in priority order)
 
-1. **Match history tracking** — Record game results
-2. **Elo-based ranking** — More sophisticated ranking algorithm
-3. **Automated matchmaking** — Pair players by skill level
-4. **Tournament features** — Organize club tournaments
-5. **Social features** — Comments, reactions on profiles
-6. **Head-to-head comparison** — Compare two players side by side
-7. **Export data** — CSV/PDF reports
-8. **Player of the Week/Month** — Recognition features
+1. **Elo-based ranking** — (Reverted/Cancelled) Opted for existing community vote-based ranking
+2. **Automated matchmaking** — Pair players by skill level
+3. **Social features** — Comments, reactions on profiles
+4. **Head-to-head comparison** — Compare two players side by side
+5. **Export data** — CSV/PDF reports
+6. **Player of the Week/Month** — Recognition features
 
 ---
 

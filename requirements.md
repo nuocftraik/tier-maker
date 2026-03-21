@@ -115,9 +115,35 @@ This document defines the functional and non-functional requirements for the INR
 
 - The system shall allow admins to manually adjust a member's tier
 - The system shall allow admins to manage member data (CRUD)
-- The system shall allow admins to change the club access code
+- The system shall allow admins to change the club access code (Current implementation displays this and admin password in plain text)
 - The system shall allow admins to toggle S-tier special effects
 - The system shall allow admins to manage admin permissions
+
+---
+
+### 2.9 Match History & Tracking (Implemented Phase 8)
+
+- The system shall allow users to record match results (Singles and Doubles).
+- The system shall dynamically expose multiple set score inputs based on the selected match format (BO1, BO3, BO5).
+- The system shall display matches in a global feed and on user profiles with detailed per-set breakdowns (e.g., 2-0 (21-15, 21-18)).
+- The system shall display Best Of format tags (BO1, BO3, BO5) for all applicable matches.
+- The system shall enforce access control, allowing only match creators and administrators to edit or delete match records.
+- *(Bug)* The system currently permits selecting the same player for both opposing teams.
+- *(Bug)* The system currently accepts leading zeros in score inputs.
+- The system shall allow match creators and admins to delete matches
+- The system shall track player statistics like Win/Loss ratios
+
+---
+
+### 2.10 Tournament Features (Implemented Phase 11)
+
+- The system shall allow admins to create Single Elimination, Round Robin, or Custom tournaments.
+- The system shall provide a dedicated UI dropdown to select the BO format (BO1, BO3, BO5), which is saved utilizing the tournament description field as a backend workaround.
+- The system shall mandate custom confirmation modals specifically for Tournament Creation and Tournament Start actions to verify settings.
+- The system shall visually highlight the overall tournament winner with a "CHAMPION" badge in the finalized view.
+- The system shall automatically generate match brackets or groups based on participants.
+- The system shall progress winners to the next stage upon match completion seamlessly mapping to Match History.
+- *(Bug)* Profile links from bracket components currently route to 'undefined' IDs.
 
 ---
 
@@ -131,7 +157,7 @@ This document defines the functional and non-functional requirements for the INR
 ### 3.2 Usability
 - The system shall have a premium, gaming-style UI
 - The system shall support dark mode
-- The system shall support bilingual interface (Vietnamese + English)
+- The system shall support bilingual interface (Vietnamese + English) - Current reality: English translation only applies to navigation menus.
 - The system shall be usable on both desktop and mobile devices
 - The system shall use modern animations and micro-interactions
 
@@ -187,5 +213,7 @@ This document defines the functional and non-functional requirements for the INR
 ### Data Volume Estimates
 - Users: ~30 (max ~100)
 - Votes: ~30 × 29 = ~870 max (each user votes for all others)
+- Matches: Continually growing as club plays
+- Tournaments: ~1-2 per month
 - Rankings: ~30 computed records
 - Storage: ~5MB for avatars

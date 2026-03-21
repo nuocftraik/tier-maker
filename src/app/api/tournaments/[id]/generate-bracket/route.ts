@@ -27,27 +27,39 @@ export async function POST(
       .single();
 
     if (tournamentError) throw tournamentError;
-    if (tournament.status !== 'draft') {
+    const body = await request.json().catch(() => ({}));
+    const advancingParticipants = body.advancingParticipants;
+    const isAdvancingKnockout = body.stage === 'knockout';
+
+    if (tournament.status !== 'draft' && !isAdvancingKnockout) {
       return NextResponse.json({ error: 'Chỉ có thể tạo vòng đấu cho giải đấu nháp' }, { status: 400 });
     }
 
     const matchType = tournament.match_mode || 'singles';
 
-    const { data: participants, error: participantError } = await supabase
-      .from('tournament_participants')
-      .select('user_id, seed, group_number')
-      .eq('tournament_id', id)
-      .order('seed', { ascending: true });
+    let participants = [];
+    if (isAdvancingKnockout && advancingParticipants && advancingParticipants.length >= 2) {
+      participants = advancingParticipants;
+    } else {
+      const { data: dbParticipants, error: participantError } = await supabase
+        .from('tournament_participants')
+        .select('user_id, seed, group_number')
+        .eq('tournament_id', id)
+        .order('seed', { ascending: true });
 
-    if (participantError) throw participantError;
+      if (participantError) throw participantError;
+      participants = dbParticipants || [];
+    }
+
     if (participants.length < 2) {
       return NextResponse.json({ error: 'Cần ít nhất 2 người chơi' }, { status: 400 });
     }
 
-    if (tournament.type === 'elimination') {
-      await generateEliminationBracket(id, participants, session.id, matchType);
+    if (tournament.type === 'elimination' || isAdvancingKnockout) {
+      await generateEliminationBracket(id, participants, session.id, matchType, isAdvancingKnockout ? 'knockout' : undefined);
     } else if (tournament.type === 'round_robin') {
-      await generateRoundRobinSchedule(id, participants, session.id, matchType);
+      const config = tournament.format_config || {};
+      await generateRoundRobinSchedule(id, participants, session.id, matchType, undefined, undefined, config.group_bo || 1);
     } else if (tournament.type === 'custom') {
       await generateCustomTournament(id, tournament, participants, session.id, matchType);
     }
@@ -70,19 +82,48 @@ async function generateEliminationBracket(
   stage?: string // 'knockout' for custom tournaments
 ) {
   const isDoubles = matchType === 'doubles';
-  const entityCount = isDoubles ? Math.ceil(participants.length / 2) : participants.length;
-  const rounds = Math.ceil(Math.log2(entityCount));
+  
+  // Group into teams
+  const teams: any[][] = [];
+  if (isDoubles) {
+    for (let i = 0; i < participants.length; i += 2) {
+      const team = [participants[i]];
+      if (i + 1 < participants.length) team.push(participants[i+1]);
+      teams.push(team);
+    }
+  } else {
+    participants.forEach(p => teams.push([p]));
+  }
+
+  const entityCount = teams.length;
+  // Calculate nearest power of 2
+  const rounds = Math.max(1, Math.ceil(Math.log2(entityCount)));
   const totalSlots = Math.pow(2, rounds);
+  const byesCount = totalSlots - entityCount;
+  const matchCountR1 = totalSlots / 2;
+
+  // Retrieve format config using a global store or pass it. We need to fetch tournament again or use parameter.
+  // We'll fetch the tournament to get format_config cleanly:
+  const { data: tour } = await supabase.from('tournaments').select('format_config').eq('id', tournamentId).single();
+  const config = tour?.format_config || {};
+  const knockoutBo = config.knockout_bo || 3;
+  const finalBo = config.final_bo || knockoutBo;
   
   const matchTree: any[] = [];
   
   for (let r = rounds; r >= 1; r--) {
     const matchesInRound = Math.pow(2, rounds - r);
     const roundMatches: any[] = [];
+    const isFinal = (r === rounds);
+    const currentBestOf = isFinal ? finalBo : knockoutBo;
     
     for (let i = 0; i < matchesInRound; i++) {
       const nextMatchIndex = Math.floor(i / 2);
       const nextMatchId = r < rounds ? matchTree[rounds - r - 1][nextMatchIndex].id : null;
+      
+      // If it's round 1, we determine if it's a bye later, for now just insert empty matches.
+      // Wait, we need to insert `is_bye` flag for Round 1 matches!
+      // Let's insert matches first, then we update them if they are byes.
       
       const { data: match, error } = await supabase
         .from('matches')
@@ -95,7 +136,9 @@ async function generateEliminationBracket(
           match_order: i + 1,
           next_match_id: nextMatchId,
           stage: stage || 'knockout',
-          created_by: creatorId
+          created_by: creatorId,
+          best_of: currentBestOf,
+          is_bye: false // default, updated later for R1
         }])
         .select('id')
         .single();
@@ -108,37 +151,66 @@ async function generateEliminationBracket(
   
   const round1Matches = matchTree[rounds - 1];
   
-  for (let i = 0; i < totalSlots / 2; i++) {
+  // Distribute Byes evenly to opposite ends of the bracket
+  const matchAssignments = Array(matchCountR1).fill(null).map(() => ({ teamA: null as any[]|null, teamB: null as any[]|null, is_bye: false }));
+  let left = 0;
+  let right = matchCountR1 - 1;
+  let placingLeft = true;
+  
+  for(let i = 0; i < byesCount; i++) {
+     const matchIdx = placingLeft ? left++ : right--;
+     matchAssignments[matchIdx].teamA = teams.shift() || null;
+     matchAssignments[matchIdx].is_bye = true;
+     placingLeft = !placingLeft;
+  }
+  // Fill remaining slots
+  for(let i = 0; i < matchCountR1; i++) {
+     if (!matchAssignments[i].teamA && teams.length > 0) matchAssignments[i].teamA = teams.shift() || null;
+     if (!matchAssignments[i].teamB && !matchAssignments[i].is_bye && teams.length > 0) matchAssignments[i].teamB = teams.shift() || null;
+  }
+  
+  for (let i = 0; i < matchCountR1; i++) {
     const match = round1Matches[i];
-    const participantsToInsert = [];
+    const assignment = matchAssignments[i];
+    const participantsToInsert: any[] = [];
     
-    if (isDoubles) {
-      // Team A: players at (i*2)*2 and (i*2)*2 + 1
-      const pA1 = i * 4;
-      const pA2 = i * 4 + 1;
-      const pB1 = i * 4 + 2;
-      const pB2 = i * 4 + 3;
-
-      if (pA1 < participants.length) participantsToInsert.push({ match_id: match.id, user_id: participants[pA1].user_id, team: 'A' });
-      if (pA2 < participants.length) participantsToInsert.push({ match_id: match.id, user_id: participants[pA2].user_id, team: 'A' });
-      
-      if (pB1 < participants.length) participantsToInsert.push({ match_id: match.id, user_id: participants[pB1].user_id, team: 'B' });
-      if (pB2 < participants.length) participantsToInsert.push({ match_id: match.id, user_id: participants[pB2].user_id, team: 'B' });
-    } else {
-      const playerAIndex = i * 2;
-      const playerBIndex = i * 2 + 1;
-      
-      if (playerAIndex < participants.length) {
-        participantsToInsert.push({ match_id: match.id, user_id: participants[playerAIndex].user_id, team: 'A' });
-      }
-      if (playerBIndex < participants.length) {
-        participantsToInsert.push({ match_id: match.id, user_id: participants[playerBIndex].user_id, team: 'B' });
-      }
+    if (assignment.teamA) {
+      assignment.teamA.forEach(p => {
+        participantsToInsert.push({ match_id: match.id, user_id: p.user_id, team: 'A' });
+      });
+    }
+    if (assignment.teamB) {
+      assignment.teamB.forEach(p => {
+        participantsToInsert.push({ match_id: match.id, user_id: p.user_id, team: 'B' });
+      });
     }
     
     if (participantsToInsert.length > 0) {
       const { error } = await supabase.from('match_participants').insert(participantsToInsert);
       if (error) throw error;
+    }
+
+    // If it's a bye match, update the match record to implicitly win for Team A
+    // We can set team_a_score = 1 to automatically advance them, but since advance logic usually relies on user submitting score,
+    // we should just set team_a_score = wins necessary, or handled by the bracket UI automatically?
+    // Let's set team_a_score = Math.ceil(knockoutBo / 2) so it's already "won".
+    if (assignment.is_bye) {
+      const winScore = Math.ceil(knockoutBo / 2);
+      await supabase.from('matches').update({ is_bye: true, team_a_score: winScore }).eq('id', match.id);
+      
+      // Auto advance to next match
+      // Find what match it connects to
+      const nextMatchIndex = Math.floor(i / 2);
+      const isTeamAInNext = i % 2 === 0;
+      if (rounds > 1 && assignment.teamA) {
+         const nextMatchId = matchTree[rounds - 2][nextMatchIndex].id;
+         const advancementInsert = assignment.teamA.map(p => ({
+           match_id: nextMatchId,
+           user_id: p.user_id,
+           team: isTeamAInNext ? 'A' : 'B'
+         }));
+         await supabase.from('match_participants').insert(advancementInsert);
+      }
     }
   }
 }
@@ -146,7 +218,7 @@ async function generateEliminationBracket(
 // ===== ROUND ROBIN =====
 async function generateRoundRobinSchedule(
   tournamentId: string, participants: any[], creatorId: string, matchType: string,
-  groupNumber?: number, stage?: string
+  groupNumber?: number, stage?: string, bestOf: number = 1
 ) {
   const isDoubles = matchType === 'doubles';
   
@@ -187,7 +259,8 @@ async function generateRoundRobinSchedule(
             match_order: i + 1,
             stage: stage || 'group',
             group_number: groupNumber || null,
-            created_by: creatorId
+            created_by: creatorId,
+            best_of: bestOf
           }])
           .select('id')
           .single();
@@ -211,6 +284,8 @@ async function generateCustomTournament(
   tournamentId: string, tournament: any, participants: any[], creatorId: string, matchType: string
 ) {
   const groupCount = tournament.group_count || 2;
+  const config = tournament.format_config || {};
+  const groupBo = config.group_bo || 1;
   
   // Group participants by group_number
   const groups: Record<number, any[]> = {};
@@ -221,7 +296,7 @@ async function generateCustomTournament(
   // Generate round-robin for each group
   for (let g = 1; g <= groupCount; g++) {
     if (groups[g].length >= 2) {
-      await generateRoundRobinSchedule(tournamentId, groups[g], creatorId, matchType, g, 'group');
+      await generateRoundRobinSchedule(tournamentId, groups[g], creatorId, matchType, g, 'group', groupBo);
     }
   }
   

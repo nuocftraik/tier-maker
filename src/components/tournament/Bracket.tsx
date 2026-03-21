@@ -21,6 +21,8 @@ interface Match {
   match_order: number;
   next_match_id?: string;
   set_scores?: {a: number, b: number}[];
+  is_bye?: boolean;
+  best_of?: number;
 }
 
 interface BracketProps {
@@ -157,30 +159,38 @@ const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean
         <div className={styles.divider} />
         
         {/* Team B */}
-        <div className={`${styles.playerRow} ${isPlayed && isTeamBWinner ? styles.winner : ''} ${isPlayed && !isTeamBWinner && match.team_b?.length > 0 ? styles.loser : ''}`}>
-          <div className={styles.playerInfo}>
-            {match.team_b?.length > 0 ? (
-              <div className={styles.teamContainer}>
-                {match.team_b.map((p, idx) => (
-                  <div key={p.id} className={styles.playerStack}>
-                    <Avatar src={p.avatar_url} alt={p.name} size="sm" />
-                    <span className={styles.playerName}>{p.name}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className={styles.placeholder}>TBD</span>
-            )}
+        {match.is_bye ? (
+          <div className={`${styles.playerRow}`}>
+            <div className={styles.playerInfo}>
+              <span className={styles.placeholder} style={{ color: 'var(--primary-color)', fontStyle: 'italic', fontSize: '0.85rem' }}>✨ Đặc cách (BYE)</span>
+            </div>
           </div>
-          <div className={styles.scoreInfo}>
-            <div className={styles.score}>{match.team_b_score}</div>
-            {match.set_scores && match.set_scores.length > 0 && (
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                ({match.set_scores.map(s => s.b).join(', ')})
-              </div>
-            )}
+        ) : (
+          <div className={`${styles.playerRow} ${isPlayed && isTeamBWinner ? styles.winner : ''} ${isPlayed && !isTeamBWinner && match.team_b?.length > 0 ? styles.loser : ''}`}>
+            <div className={styles.playerInfo}>
+              {match.team_b?.length > 0 ? (
+                <div className={styles.teamContainer}>
+                  {match.team_b.map((p, idx) => (
+                    <div key={p.id} className={styles.playerStack}>
+                      <Avatar src={p.avatar_url} alt={p.name} size="sm" />
+                      <span className={styles.playerName}>{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className={styles.placeholder}>TBD</span>
+              )}
+            </div>
+            <div className={styles.scoreInfo}>
+              <div className={styles.score}>{match.team_b_score}</div>
+              {match.set_scores && match.set_scores.length > 0 && (
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  ({match.set_scores.map(s => s.b).join(', ')})
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div className={styles.connector} />
     </div>

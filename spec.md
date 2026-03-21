@@ -11,7 +11,7 @@ This document defines the complete technical design of the INRES Badminton Club 
 
 ## 2. Scope
 
-### In Scope (MVP)
+### In Scope (MVP + Post-MVP)
 - Authentication (access code + admin password)
 - Member management with avatar support
 - Dual voting system (Click & Score + Drag & Drop TierMaker)
@@ -19,14 +19,14 @@ This document defines the complete technical design of the INRES Badminton Club 
 - Real-time leaderboard (gaming style)
 - Member profiles with vote history
 - Admin panel
+- Match History Tracking & Enhancements
+- Tournament Features (Single Elimination, Round Robin, Custom, BO3)
 - Dark mode + bilingual (Vi/En)
 - Responsive design (mobile + desktop)
 
-### Out of Scope (Future)
-- Match history tracking
-- Elo-based ranking
+### Out of Scope (Future / Reverted)
+- Elo-based ranking (Reverted to community vote system)
 - Automated matchmaking
-- Tournament features
 - Social features
 - Head-to-head comparison
 - Data export (CSV/PDF)
@@ -187,6 +187,35 @@ INSERT INTO settings (key, value) VALUES
   ('tier_f_threshold', '3.0');
 ```
 
+### 4.5 Matches & Tournaments Tables (Added Phase 8 & 11)
+
+```sql
+CREATE TABLE matches (
+  id UUID PRIMARY KEY,
+  type VARCHAR (singles/doubles),
+  team_a_score INT,
+  team_b_score INT,
+  set_scores JSONB,
+  tournament_id UUID,
+  created_at TIMESTAMPTZ
+);
+
+CREATE TABLE match_participants (
+  match_id UUID,
+  user_id UUID,
+  team VARCHAR
+);
+
+CREATE TABLE tournaments (
+  id UUID PRIMARY KEY,
+  name VARCHAR,
+  type VARCHAR (elimination/round_robin/custom),
+  status VARCHAR,
+  description TEXT, -- Used for BO format
+  created_at TIMESTAMPTZ
+);
+```
+
 ---
 
 ## 5. Core Logic
@@ -259,6 +288,21 @@ ORDER BY:
 | F | 3.0 – 3.9 | `#78909C` (Gray) | 3.5 |
 | Bot | < 3.0 | `#37474F` (Dark Gray) | 2.0 |
 | Unranked | No votes | `#546E7A` (Muted) | — |
+
+### 5.6 Match Logic (Observed)
+- The system dynamically handles BO1, BO3, and BO5 formats by storing overall scores along with an array of individual set scores.
+- The UI exposes specific input groups per set depending on the selected "Best of" dropdown.
+- Only administrators or the original match creators possess the authorization to edit or delete match records.
+- The system currently allows selecting the identical player entity for both Team A and Team B in match creation/edit.
+- Score inputs treat numerical values loosely, allowing inputs with leading zeros (e.g., "018").
+
+### 5.7 Localization Logic (Observed)
+- The application implements a VI/EN toggle, but its scope is limited to navigation headers. The core UI components rely on hardcoded Vietnamese strings.
+
+### 5.8 Tournament Logic (Observed)
+- **Best Of Workaround**: The "Số ván thắng" (BO1, BO3, BO5) selected in the frontend is stored and parsed using the `description` string column in the database API.
+- **Pre-flight Modals**: Tournament start and creation trigger custom verification modals holding summarized participant and setting details to prevent misconfiguration.
+- **Champion State**: The final winner is marked in the UI via specific checks against the bracket end-states, awarding a champion badge dynamically.
 
 ---
 
@@ -371,7 +415,23 @@ Delete a specific vote.
 
 ---
 
-### 6.5 Admin APIs
+### 6.5 Matches & Tournaments APIs
+
+#### Matches APIs
+- `GET /api/matches`: Feed of recent matches globally or for a specific user.
+- `POST /api/matches`: Report new match result, including set scores.
+- `PUT /api/matches/:id`: Edit match details (Admin & match creator).
+- `DELETE /api/matches/:id`: Delete a match (Admin & match creator).
+
+#### Tournaments APIs
+- `GET /api/tournaments`: List of active and completed tournaments.
+- `POST /api/tournaments`: Create a new tournament.
+- `GET /api/tournaments/:id`: Details and brackets of a tournament.
+- `POST /api/tournaments/:id/generate-bracket`: Generate matches for the bracket.
+
+---
+
+### 6.6 Admin APIs
 
 #### PUT `/api/admin/settings`
 ```json
@@ -590,11 +650,13 @@ styles/
 
 ---
 
-## 11. Edge Cases
+## 11. Edge Cases & Known Issues
 
-| Case | Handling |
+| Case | Handling / Current State |
 |------|----------|
 | User with 0 votes | Display as "Unranked", no score shown |
+| Admin Settings View | Currently reveals access codes and admin passwords in plain text without masking. |
+| Tournament Bracket Profile Link | Player avatars in brackets occasionally link to `/profile/undefined` due to a rendering bug. |
 | Multiple rapid vote updates | Debounce API calls (300ms) |
 | Tie in score | More votes → higher; then alphabetical |
 | Deleting user with votes | Cascade delete votes; recalculate rankings |

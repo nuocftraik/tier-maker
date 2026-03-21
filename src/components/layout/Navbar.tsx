@@ -19,9 +19,9 @@ export const Navbar = ({ session }: { session: any }) => {
 
   const navItems = [
     { name: 'Xếp hạng', href: '/leaderboard', icon: <Trophy size={18} /> },
-    { name: 'Giải đấu', href: '/tournaments', icon: <Medal size={18} /> },
-    { name: 'Bỏ phiếu', href: '/vote', icon: <CheckSquare size={18} /> },
     { name: 'Trận đấu', href: '/matches', icon: <Swords size={18} /> },
+    { name: 'Bỏ phiếu', href: '/vote', icon: <CheckSquare size={18} /> },
+    { name: 'Giải đấu', href: '/tournaments', icon: <Medal size={18} /> },
     { name: 'Cá nhân', href: `/profile/${session?.id}`, icon: <User size={18} /> },
   ];
 

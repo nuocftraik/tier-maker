@@ -30,6 +30,20 @@
   background-color: rgba(251, 191, 36, 0.05);
 }
 
+.advancingRow {
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.advanceTag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 1rem;
+}
+
 .userCell {
   display: flex;
   align-items: center;

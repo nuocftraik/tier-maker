@@ -135,7 +135,13 @@ export default function EditMatchPage() {
               <h2 className={styles.teamName} style={{ color: '#ef4444' }}>ĐỘI A</h2>
               <div className={styles.scoreInputGroup}>
                 <input 
-                  type="number" min="0" required value={scoreA} onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
+                  type="number" min="0" required value={scoreA.toString()} 
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/^0+/, '');
+                    if (val === '') val = '0';
+                    setScoreA(parseInt(val, 10));
+                  }}
+                  onBlur={(e) => { e.target.value = scoreA.toString(); }}
                   className={styles.scoreInput}
                   style={{ borderColor: scoreA > scoreB ? '#ef4444' : 'var(--border-color)' }}
                 />
@@ -145,7 +151,7 @@ export default function EditMatchPage() {
               <div className={styles.playerSelection}>
                 <p className={styles.helperText}>Chọn thành viên ({teamA.length}/{type === 'singles' ? 1 : 2}):</p>
                 <div className={styles.playerList}>
-                  {users.map((u: any) => (
+                  {users.filter((u: any) => !teamB.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id} onClick={() => togglePlayer('A', u.id)}
                       className={`${styles.playerAvatar} ${isPlayerSelected('A', u.id) ? styles.selectedA : ''}`}
@@ -164,7 +170,13 @@ export default function EditMatchPage() {
               <h2 className={styles.teamName} style={{ color: '#3b82f6' }}>ĐỘI B</h2>
               <div className={styles.scoreInputGroup}>
                 <input 
-                  type="number" min="0" required value={scoreB} onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
+                  type="number" min="0" required value={scoreB.toString()} 
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/^0+/, '');
+                    if (val === '') val = '0';
+                    setScoreB(parseInt(val, 10));
+                  }}
+                  onBlur={(e) => { e.target.value = scoreB.toString(); }}
                   className={styles.scoreInput}
                   style={{ borderColor: scoreB > scoreA ? '#3b82f6' : 'var(--border-color)' }}
                 />
@@ -174,7 +186,7 @@ export default function EditMatchPage() {
               <div className={styles.playerSelection}>
                 <p className={styles.helperText}>Chọn thành viên ({teamB.length}/{type === 'singles' ? 1 : 2}):</p>
                 <div className={styles.playerList}>
-                  {users.map((u: any) => (
+                  {users.filter((u: any) => !teamA.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id} onClick={() => togglePlayer('B', u.id)}
                       className={`${styles.playerAvatar} ${isPlayerSelected('B', u.id) ? styles.selectedB : ''}`}

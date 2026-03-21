@@ -167,6 +167,8 @@ const MembersTab = () => {
 const SettingsTab = () => {
   const { data: settings, mutate } = useSWR('/api/admin/settings', fetcher);
   const [formData, setFormData] = useState<any>(null);
+  const [showAccessCode, setShowAccessCode] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   if (!settings) return <div>Đang tải...</div>;
   if (!formData) setFormData(settings); // init
@@ -192,16 +194,28 @@ const SettingsTab = () => {
       <form onSubmit={handleSave} className={styles.settingsForm}>
         <div className={styles.formSection}>
           <h3>Bảo mật</h3>
-          <Input 
-            label="Mã truy cập chung (Access Code)" 
-            value={formData?.access_code || ''} 
-            onChange={e => setFormData({...formData, access_code: e.target.value})} 
-          />
-          <Input 
-            label="Mật khẩu Admin" 
-            value={formData?.admin_password || ''} 
-            onChange={e => setFormData({...formData, admin_password: e.target.value})} 
-          />
+          <div style={{ position: 'relative' }}>
+            <Input 
+              type={showAccessCode ? "text" : "password"}
+              label="Mã truy cập chung (Access Code)" 
+              value={formData?.access_code || ''} 
+              onChange={e => setFormData({...formData, access_code: e.target.value})} 
+            />
+            <button type="button" onClick={() => setShowAccessCode(!showAccessCode)} style={{ position: 'absolute', right: '10px', top: '35px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              {showAccessCode ? 'Ẩn' : 'Hiện'}
+            </button>
+          </div>
+          <div style={{ position: 'relative', marginTop: '1rem' }}>
+            <Input 
+              type={showAdminPassword ? "text" : "password"}
+              label="Mật khẩu Admin" 
+              value={formData?.admin_password || ''} 
+              onChange={e => setFormData({...formData, admin_password: e.target.value})} 
+            />
+            <button type="button" onClick={() => setShowAdminPassword(!showAdminPassword)} style={{ position: 'absolute', right: '10px', top: '35px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              {showAdminPassword ? 'Ẩn' : 'Hiện'}
+            </button>
+          </div>
         </div>
 
         <div className={styles.formSection}>

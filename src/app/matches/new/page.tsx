@@ -248,8 +248,13 @@ function MatchForm() {
                   type="number" 
                   min="0"
                   required
-                  value={scoreA}
-                  onChange={(e) => setScoreA(parseInt(e.target.value) || 0)}
+                  value={scoreA.toString()}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/^0+/, '');
+                    if (val === '') val = '0';
+                    setScoreA(parseInt(val, 10));
+                  }}
+                  onBlur={(e) => { e.target.value = scoreA.toString(); }}
                   className={styles.scoreInput}
                   style={{ borderColor: scoreA > scoreB ? '#ef4444' : 'var(--border-color)', opacity: isMultiSet ? 0.6 : 1 }}
                   readOnly={isMultiSet}
@@ -264,7 +269,7 @@ function MatchForm() {
                   {matchId ? <><Lock size={12} /> Thành viên đã được xếp</> : `Chọn thành viên (${teamA.length}/${type === 'singles' ? 1 : 2}):`}
                 </p>
                 <div className={`${styles.playerList} ${matchId ? styles.locked : ''}`}>
-                  {users.filter((u: any) => !matchId || teamA.includes(u.id)).map((u: any) => (
+                  {users.filter((u: any) => (!matchId || teamA.includes(u.id)) && !teamB.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id}
                       onClick={() => togglePlayer('A', u.id)}
@@ -293,8 +298,13 @@ function MatchForm() {
                   type="number" 
                   min="0"
                   required
-                  value={scoreB}
-                  onChange={(e) => setScoreB(parseInt(e.target.value) || 0)}
+                  value={scoreB.toString()}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/^0+/, '');
+                    if (val === '') val = '0';
+                    setScoreB(parseInt(val, 10));
+                  }}
+                  onBlur={(e) => { e.target.value = scoreB.toString(); }}
                   className={styles.scoreInput}
                   style={{ borderColor: scoreB > scoreA ? '#3b82f6' : 'var(--border-color)', opacity: isMultiSet ? 0.6 : 1 }}
                   readOnly={isMultiSet}
@@ -309,7 +319,7 @@ function MatchForm() {
                   {matchId ? <><Lock size={12} /> Thành viên đã được xếp</> : `Chọn thành viên (${teamB.length}/${type === 'singles' ? 1 : 2}):`}
                 </p>
                 <div className={`${styles.playerList} ${matchId ? styles.locked : ''}`}>
-                  {users.filter((u: any) => !matchId || teamB.includes(u.id)).map((u: any) => (
+                  {users.filter((u: any) => (!matchId || teamB.includes(u.id)) && !teamA.includes(u.id)).map((u: any) => (
                     <div 
                       key={u.id}
                       onClick={() => togglePlayer('B', u.id)}
@@ -350,8 +360,12 @@ function MatchForm() {
                      <input 
                        type="number" 
                        min="0" 
-                       value={isDecided ? '' : (setScores[i]?.a || '')} 
-                       onChange={(e) => updateSetScore(i, 'a', parseInt(e.target.value) || 0)} 
+                       value={isDecided ? '' : (setScores[i]?.a?.toString() ?? '0')} 
+                       onChange={(e) => {
+                         let val = e.target.value.replace(/^0+(?=\d)/, '');
+                         if (val === '') val = '0';
+                         updateSetScore(i, 'a', parseInt(val, 10));
+                       }} 
                        style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #ef4444', borderRadius: '8px', background: 'var(--background)' }} 
                        disabled={isDecided}
                      />
@@ -359,8 +373,12 @@ function MatchForm() {
                      <input 
                        type="number" 
                        min="0" 
-                       value={isDecided ? '' : (setScores[i]?.b || '')} 
-                       onChange={(e) => updateSetScore(i, 'b', parseInt(e.target.value) || 0)} 
+                       value={isDecided ? '' : (setScores[i]?.b?.toString() ?? '0')} 
+                       onChange={(e) => {
+                         let val = e.target.value.replace(/^0+(?=\d)/, '');
+                         if (val === '') val = '0';
+                         updateSetScore(i, 'b', parseInt(val, 10));
+                       }} 
                        style={{ width: '80px', height: '48px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', border: '2px solid #3b82f6', borderRadius: '8px', background: 'var(--background)' }} 
                        disabled={isDecided}
                      />

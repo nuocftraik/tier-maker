@@ -248,15 +248,16 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 - [x] **8.5** Player Match Statistics
   - Update Personal Profile page
   - Show Win/Loss ratio, total matches played
+- [x] **8.6** Match History Enhancements
+  - Add Edit and Delete functionalities for administrators and match creators
+  - Refactor match scoring UI to display Best Of format tags (BO1, BO3, BO5)
+  - Styling adjustments for match tags and scores
 
-### Phase 9: Elo-Based Ranking (Tạm hoãn)
-- [ ] Implement Elo rating algorithm
-- [ ] Dual ranking: community vote + Elo
-- [ ] Historical rating graph
-- [ ] Integrate ELO changes into Match History UI
-- Skill-based pairing suggestions
-- Singles and doubles matchmaking
-- Fair team generation
+### Phase 9: Elo-Based Ranking (Đã Hủy Bỏ / Reverted)
+- [x] Đã thử nghiệm nhưng quyết định revert để ưu tiên hệ thống community vote
+- [x] Xóa database schema, API, logic tính toán Elo
+- [x] Xóa UI hiển thị Elo trên Rankings và Profile
+- [x] Đảm bảo hệ thống hoạt động ổn định với cơ chế Rank Vote nguyên bản
 
 ### Phase 11: Tournament Features
 **Estimated: 5-7 giờ**
@@ -287,6 +288,11 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 - [x] **11.7** Tournament Finalization & History
   - Mark tournament as completed, award winner badge
   - Update user profile to list tournament podium positions
+- [x] **11.8** BO3 Tournament Flow & Custom Modals
+  - Implement Single Elimination + Singles + BO3 logic
+  - Support setting BO number (BO1, BO3, BO5) via description field workaround
+  - UI custom confirmation modals (start/confirm tournament)
+  - Display final champion and tournament completion status
 
 ### Phase 12: Social Features
 - Comments on profiles
@@ -297,3 +303,16 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 - Head-to-head comparison
 - Data export (CSV/PDF)
 - Player of the Week/Month
+- [ ] **14.1 Fix Match Creation Duplicate Players**
+  - Cập nhật logic trong form tạo/sửa trận đấu để ngăn chặn chọn cùng một người chơi cho cả 2 đội (Team A và Team B).
+- [ ] **14.2 Secure Admin Settings UI**
+  - Chuyển đổi các trường hiển thị `Access Code` và `Admin Password` trong trang cài đặt Admin từ dạng clear text sang mask (`type="password"`), đi kèm nút toggle hiển thị.
+- [ ] **14.3 Fix Score Input Leading Zeros**
+  - Thêm xử lý `parseInt` hoặc validation để loại bỏ số 0 ở đầu khi nhập điểm số các set đấu (VD: không cho nhập "018", tự chuyển thành "18").
+- [ ] **14.4 Fix Tournament Bracket Profile Links**
+  - Kiểm tra và sửa lỗi thẻ `<Link>` trong form xem nhánh giải đấu dẫn đến `/profile/undefined`. Yêu cầu fallback ID an toàn.
+- [ ] **14.5 Complete i18n Localization**
+  - Đưa toàn bộ các text tiếng Việt hardcode trong các trang (Xếp hạng, Bỏ phiếu, Trận đấu) vào hệ thống từ điển ngôn ngữ để chức năng switch EN/VI hoạt động đồng bộ 100%.
+
+---
+*(Xem chi tiết Phân tích Gap trong file `product_audit_report.md`)*

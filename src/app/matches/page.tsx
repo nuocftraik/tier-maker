@@ -64,9 +64,12 @@ export default function MatchesFeedPage() {
           </h1>
           <p className={styles.subtitle}>Kết quả các trận giao lưu nội bộ gần đây</p>
         </div>
-        <Link href="/matches/new" className={styles.addBtn}>
+        <Link 
+          href={source === 'tournament' ? "/tournaments/new" : "/matches/new"} 
+          className={styles.addBtn}
+        >
           <Plus size={20} />
-          <span>Ghi nhận trận mới</span>
+          <span>{source === 'tournament' ? 'Tạo giải đấu' : 'Ghi nhận trận mới'}</span>
         </Link>
       </header>
 
@@ -123,8 +126,13 @@ export default function MatchesFeedPage() {
       ) : matches.length === 0 ? (
         <div className={styles.emptyState}>
           <Swords size={48} className={styles.emptyIcon} />
-          <p>Chưa có trận đấu nào được ghi nhận.</p>
-          <Link href="/matches/new" className={styles.emptyBtn}>Ghi nhận ngay</Link>
+          <p>{source === 'tournament' ? 'Chưa có trận đấu giải nào được ghi nhận.' : 'Chưa có trận đấu nào được ghi nhận.'}</p>
+          <Link 
+            href={source === 'tournament' ? "/tournaments/new" : "/matches/new"} 
+            className={styles.emptyBtn}
+          >
+            {source === 'tournament' ? 'Tạo giải đấu ngay' : 'Ghi nhận ngay'}
+          </Link>
         </div>
       ) : (
         <div className={styles.matchList}>

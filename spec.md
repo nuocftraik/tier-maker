@@ -293,8 +293,6 @@ ORDER BY:
 - The system dynamically handles BO1, BO3, and BO5 formats by storing overall scores along with an array of individual set scores.
 - The UI exposes specific input groups per set depending on the selected "Best of" dropdown.
 - Only administrators or the original match creators possess the authorization to edit or delete match records.
-- The system currently allows selecting the identical player entity for both Team A and Team B in match creation/edit.
-- Score inputs treat numerical values loosely, allowing inputs with leading zeros (e.g., "018").
 
 ### 5.7 Localization Logic (Observed)
 - The application implements a VI/EN toggle, but its scope is limited to navigation headers. The core UI components rely on hardcoded Vietnamese strings.
@@ -655,8 +653,6 @@ styles/
 | Case | Handling / Current State |
 |------|----------|
 | User with 0 votes | Display as "Unranked", no score shown |
-| Admin Settings View | Currently reveals access codes and admin passwords in plain text without masking. |
-| Tournament Bracket Profile Link | Player avatars in brackets occasionally link to `/profile/undefined` due to a rendering bug. |
 | Multiple rapid vote updates | Debounce API calls (300ms) |
 | Tie in score | More votes → higher; then alphabetical |
 | Deleting user with votes | Cascade delete votes; recalculate rankings |

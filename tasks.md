@@ -300,16 +300,18 @@ Chia thành **6 phases**, ước tính tổng thời gian: **~3-5 ngày** (vibe 
 - Activity feed
 
 ### Phase 13: Utilities
-- Head-to-head comparison
-- Data export (CSV/PDF)
-- Player of the Week/Month
-- [ ] **14.1 Fix Match Creation Duplicate Players**
+- [x] **13.1 Head-to-head comparison**
+  - Xem lịch sử đối đầu trực tiếp giữa 2 người chơi qua trang `/head-to-head`.
+- [x] **13.2 Player of the Month**
+  - Tính năng vinh danh người chơi xuất sắc nhất tháng (most wins) trên Leaderboard.
+- [ ] Data export (CSV/PDF)
+- [x] **14.1 Fix Match Creation Duplicate Players**
   - Cập nhật logic trong form tạo/sửa trận đấu để ngăn chặn chọn cùng một người chơi cho cả 2 đội (Team A và Team B).
-- [ ] **14.2 Secure Admin Settings UI**
+- [x] **14.2 Secure Admin Settings UI**
   - Chuyển đổi các trường hiển thị `Access Code` và `Admin Password` trong trang cài đặt Admin từ dạng clear text sang mask (`type="password"`), đi kèm nút toggle hiển thị.
-- [ ] **14.3 Fix Score Input Leading Zeros**
+- [x] **14.3 Fix Score Input Leading Zeros**
   - Thêm xử lý `parseInt` hoặc validation để loại bỏ số 0 ở đầu khi nhập điểm số các set đấu (VD: không cho nhập "018", tự chuyển thành "18").
-- [ ] **14.4 Fix Tournament Bracket Profile Links**
+- [x] **14.4 Fix Tournament Bracket Profile Links**
   - Kiểm tra và sửa lỗi thẻ `<Link>` trong form xem nhánh giải đấu dẫn đến `/profile/undefined`. Yêu cầu fallback ID an toàn.
 - [ ] **14.5 Complete i18n Localization**
   - Đưa toàn bộ các text tiếng Việt hardcode trong các trang (Xếp hạng, Bỏ phiếu, Trận đấu) vào hệ thống từ điển ngôn ngữ để chức năng switch EN/VI hoạt động đồng bộ 100%.

@@ -7,8 +7,9 @@ import Confetti from 'react-confetti';
 import { TopThree } from '@/components/leaderboard/TopThree';
 import { LeaderboardTable } from '@/components/leaderboard/LeaderboardTable';
 import { Button } from '@/components/ui/Button/Button';
-import { Trophy } from 'lucide-react';
+import { Trophy, Medal, Swords, Target } from 'lucide-react';
 import styles from './page.module.css';
+import { POTMCard } from '@/components/leaderboard/POTMCard';
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -66,11 +67,18 @@ export default function LeaderboardPage() {
       )}
 
       <header className={styles.header}>
-        <div className={styles.titleWrapper}>
-          <Trophy className={styles.trophyIcon} size={32} />
-          <h1 className={styles.title}>BẢNG VÀNG INRES</h1>
+        <div className={styles.headerInfo}>
+          <div className={styles.titleWrapper}>
+            <Trophy className={styles.trophyIcon} size={32} />
+            <h1 className={styles.title}>BẢNG VÀNG INRES</h1>
+          </div>
+          <p className={styles.subtitle}>Cập nhật thành tích và xếp hạng CLB theo thời gian thực ⚡</p>
         </div>
-        <p className={styles.subtitle}>Cập nhật thành tích và xếp hạng CLB theo thời gian thực ⚡</p>
+        <div className={styles.headerActions}>
+           <Button onClick={() => window.location.href = '/head-to-head'} variant="outline" className={styles.h2hQuickBtn}>
+              <Target size={18} /> So sánh Đối đầu (H2H)
+           </Button>
+        </div>
       </header>
 
       <div className={styles.filterSection}>
@@ -98,6 +106,7 @@ export default function LeaderboardPage() {
         <div className={styles.errorBanner}>{error.message}</div>
       ) : (
         <div className={styles.content}>
+          {filter === 'All' && <div className={styles.spotlight}><POTMCard /></div>}
           <TopThree topPlayers={rankings} sTierSettings={sTierSettings} />
           <LeaderboardTable 
             players={rankings} 

@@ -124,14 +124,14 @@ An admin logs in with admin password → manages members, changes access code, a
 
 ### 7.6 Admin Panel
 - CRUD members
-- Change access code (Current: Admin passwords and access codes are displayed in plain text)
+- Change access code
 - Manual tier/ranking adjustments
 - Admin permission management
 
 ### 7.7 UI/UX
 - Responsive (mobile-first + desktop)
 - Dark mode
-- Bilingual (Vietnamese + English) - Current: Only navigation links are translated; core content is locked to Vietnamese.
+- Bilingual (Vietnamese + English)
 - Modern animations and transitions
   - Hover effects, particle effects for S-tier
 
@@ -142,8 +142,6 @@ An admin logs in with admin password → manages members, changes access code, a
 - History feed displays Best Of format tags (BO1, BO3, BO5) along with detailed per-set scores inside parentheses.
 - Match editing and deletion functionalities are strictly restricted to Administrators and the match creator.
 - Player match statistics (Win/Loss ratio)
-- *Observed Issue*: Currently allows selecting the identical player for both Team A and Team B.
-- *Observed Issue*: Score inputs permit numerical strings with leading zeros (e.g., "018").
 
 ### 7.9 Tournament Features (Phase 11 - Implemented)
 - Organize club tournaments (Single Elimination, Round Robin, Custom)
@@ -152,7 +150,6 @@ An admin logs in with admin password → manages members, changes access code, a
 - Custom confirmation modals for critical actions, including pre-flight summaries before Tournament Creation and Start phases.
 - Finalized tournament history highlighting the winner with a prominent Champion badge (🏆 NHÀ VÔ ĐỊCH 🏆).
 - Standings table and past bracket inspection.
-- *Observed Issue*: Player profile links from the tournament bracket occasionally route to 'undefined' IDs.
 
 ---
 

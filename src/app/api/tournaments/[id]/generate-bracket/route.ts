@@ -16,8 +16,8 @@ export async function POST(
       return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
     }
     const session = await decrypt(sessionCookie.value);
-    if (!session || !session.isAdmin) {
-      return NextResponse.json({ error: 'Chỉ admin mới có quyền tạo vòng đấu' }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: 'Phiên làm việc hết hạn' }, { status: 401 });
     }
 
     const { data: tournament, error: tournamentError } = await supabase
@@ -27,6 +27,10 @@ export async function POST(
       .single();
 
     if (tournamentError) throw tournamentError;
+    
+    if (!session.isAdmin && tournament.created_by !== session.id) {
+      return NextResponse.json({ error: 'Chỉ admin hoặc người tạo giải mới có quyền tạo vòng đấu' }, { status: 403 });
+    }
     const body = await request.json().catch(() => ({}));
     const advancingParticipants = body.advancingParticipants;
     const isAdvancingKnockout = body.stage === 'knockout';

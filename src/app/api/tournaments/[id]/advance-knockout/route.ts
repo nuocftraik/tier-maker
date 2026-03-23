@@ -17,8 +17,8 @@ export async function POST(
       return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
     }
     const session = await decrypt(sessionCookie.value);
-    if (!session || !session.isAdmin) {
-      return NextResponse.json({ error: 'Chỉ admin mới có quyền' }, { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: 'Phiên làm việc hết hạn' }, { status: 401 });
     }
 
     // Fetch tournament
@@ -29,6 +29,10 @@ export async function POST(
       .single();
 
     if (tError) throw tError;
+
+    if (!session.isAdmin && tournament.created_by !== session.id) {
+      return NextResponse.json({ error: 'Chỉ admin hoặc người tạo giải mới có quyền chuyển vòng' }, { status: 403 });
+    }
     if (tournament.type !== 'custom') {
       return NextResponse.json({ error: 'Chỉ dùng cho giải custom' }, { status: 400 });
     }

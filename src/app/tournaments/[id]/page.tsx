@@ -48,6 +48,8 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
   const participants = data?.participants || [];
   const matches = data?.matches || [];
 
+  const canManage = session?.isAdmin || (session && tournament && session.id === tournament.created_by);
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
@@ -231,7 +233,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     )) || 'TBD'}
                   </div>
                 </div>
-                {session?.isAdmin && tournament.status !== 'draft' && match.team_a?.length > 0 && match.team_b?.length > 0 && (
+                {canManage && tournament.status !== 'draft' && match.team_a?.length > 0 && match.team_b?.length > 0 && (
                   <button onClick={() => setEditingMatch(match)} className={styles.recordBtn}>
                     {match.team_a_score > 0 || match.team_b_score > 0 ? 'Sửa điểm' : 'Ghi kết quả'}
                   </button>
@@ -253,7 +255,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <Play size={48} className={styles.playIcon} />
             <h2>Sẵn sàng bắt đầu?</h2>
             <p>Giải đấu đang ở trạng thái nháp. Hãy kiểm tra danh sách người chơi bên cạnh và bấm nút bên dưới để tạo vòng đấu.</p>
-            {session?.isAdmin && (
+            {canManage && (
               <Button onClick={() => setIsStartModalOpen(true)} disabled={isGenerating}>
                 <Swords size={18} />
                 {isGenerating ? 'Đang tạo vòng đấu...' : 'Tạo vòng đấu & Bắt đầu'}
@@ -273,7 +275,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
               <Bracket 
                 matches={matches} 
                 tournamentId={id} 
-                canEdit={session?.isAdmin && tournament.status !== 'draft'} 
+                canEdit={canManage && tournament.status !== 'draft'} 
                 onMatchClick={(m: any) => setEditingMatch(m)} 
               />
             </>
@@ -337,7 +339,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             })}
             
             {/* Advance button */}
-            {tournament.current_stage === 'group' && session?.isAdmin && (
+            {tournament.current_stage === 'group' && canManage && (
               <div className={styles.advanceSection}>
                 <Button 
                   onClick={() => setIsAdvanceModalOpen(true)} 
@@ -368,7 +370,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
               <Bracket 
                 matches={knockoutMatches} 
                 tournamentId={id} 
-                canEdit={session?.isAdmin && tournament.status !== 'draft'} 
+                canEdit={canManage && tournament.status !== 'draft'} 
                 onMatchClick={(m: any) => setEditingMatch(m)} 
               />
             </div>
@@ -407,7 +409,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          {session?.isAdmin && (
+          {canManage && (
             <div className={styles.adminActions}>
               {tournament?.status === 'draft' && (
                 <Link href={`/tournaments/${id}/edit`} className={styles.editBtn}>

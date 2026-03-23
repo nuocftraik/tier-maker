@@ -41,8 +41,8 @@ export async function POST(request: Request) {
     }
     
     const session = await decrypt(sessionCookie.value);
-    if (!session || !session.id || !session.isAdmin) {
-      return NextResponse.json({ error: 'Chỉ admin mới có quyền tạo giải đấu' }, { status: 403 });
+    if (!session || !session.id) {
+      return NextResponse.json({ error: 'Vui lòng đăng nhập để tạo giải đấu' }, { status: 401 });
     }
 
     const { 

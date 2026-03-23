@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { decrypt } from '@/lib/auth';
 
-const protectedRoutes = ['/vote', '/profile'];
+const protectedRoutes = ['/vote', '/profile', '/tournaments/new', '/tournaments/[id]/edit'];
 const adminRoutes = ['/admin'];
 const authRoutes = ['/login'];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route)) || 
+                           (path.startsWith('/tournaments/') && path.endsWith('/edit'));
   const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
   const isAuthRoute = authRoutes.includes(path);
 

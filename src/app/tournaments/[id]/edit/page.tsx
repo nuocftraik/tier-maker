@@ -150,8 +150,10 @@ export default function EditTournamentPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  const canEdit = session?.isAdmin || (session && tourneyData?.tournament && session.id === tourneyData.tournament.created_by);
+
   if (tourneyLoading) return <div className="p-8 text-center">Đang tải...</div>;
-  if (session && !session.isAdmin) {
+  if (!canEdit) {
     return <div className="p-8 text-center">Bạn không có quyền truy cập</div>;
   }
 

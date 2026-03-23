@@ -95,8 +95,8 @@ export async function PUT(
     const { name, description, type, match_mode, seeding_mode, participants, group_count, advance_per_group, best_of } = await request.json();
     
     // Auth Check
-    const { isAdmin, error: authErr } = await checkAdmin();
-    if (authErr || !isAdmin) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+    const { allowed, error: authErr } = await checkPermission(id);
+    if (authErr || !allowed) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 403 });
 
     // Status Check - Only Draft can be edited
     const { data: tourney } = await supabase.from('tournaments').select('status').eq('id', id).single();
@@ -153,8 +153,8 @@ export async function PATCH(
     const body = await request.json();
     
     // Auth Check
-    const { isAdmin, error: authErr } = await checkAdmin();
-    if (authErr || !isAdmin) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+    const { allowed, error: authErr } = await checkPermission(id);
+    if (authErr || !allowed) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 403 });
 
     const allowedUpdates = ['current_stage', 'status'];
     const updateData: any = {};
@@ -190,8 +190,8 @@ export async function DELETE(
     const { id } = await props.params;
     
     // Auth Check
-    const { isAdmin, error: authErr } = await checkAdmin();
-    if (authErr || !isAdmin) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 401 });
+    const { allowed, error: authErr } = await checkPermission(id);
+    if (authErr || !allowed) return NextResponse.json({ error: 'Không có quyền truy cập' }, { status: 403 });
 
     // 1. Get matches
     const { data: matches } = await supabase.from('matches').select('id').eq('tournament_id', id);
@@ -217,13 +217,27 @@ export async function DELETE(
   }
 }
 
-async function checkAdmin() {
+async function checkPermission(tournamentId: string) {
   const { cookies } = await import('next/headers');
   const { decrypt } = await import('@/lib/auth');
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('session');
-  if (!sessionCookie?.value) return { isAdmin: false, error: 'Unauthorized' };
+  if (!sessionCookie?.value) return { allowed: false, error: 'Unauthorized' };
+  
   const session = await decrypt(sessionCookie.value);
-  if (!session || !session.isAdmin) return { isAdmin: false, error: 'Forbidden' };
-  return { isAdmin: true, session };
+  if (!session) return { allowed: false, error: 'Forbidden' };
+  if (session.isAdmin) return { allowed: true, session };
+
+  // Check if they are the creator
+  const { data: tournament } = await supabase
+    .from('tournaments')
+    .select('created_by')
+    .eq('id', tournamentId)
+    .single();
+
+  if (tournament && tournament.created_by === session.id) {
+    return { allowed: true, session };
+  }
+
+  return { allowed: false, error: 'Forbidden' };
 }

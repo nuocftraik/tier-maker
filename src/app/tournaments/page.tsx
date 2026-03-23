@@ -56,7 +56,7 @@ export default function TournamentsPage() {
             </h1>
             <p className={styles.subtitle}>Nơi vinh danh những nhà vô địch</p>
           </div>
-          {session?.isAdmin && (
+          {session && (
             <Link href="/tournaments/new" className={styles.addBtn}>
               <Plus size={20} />
               <span>Tạo giải mới</span>
@@ -70,7 +70,7 @@ export default function TournamentsPage() {
           <div className={styles.emptyState}>
             <Trophy size={64} className={styles.emptyIcon} />
             <p>Chưa có giải đấu nào được tổ chức.</p>
-            {session?.isAdmin && (
+            {session && (
               <Link href="/tournaments/new" className={styles.emptyBtn}>Tạo giải đấu đầu tiên</Link>
             )}
           </div>

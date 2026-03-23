@@ -13,9 +13,14 @@ const checkPermission = async (matchId: string) => {
 
   if (session.isAdmin) return { allowed: true, session };
 
-  // Check if they created the match
-  const { data: match } = await supabase.from('matches').select('created_by').eq('id', matchId).single();
+  // Check if they created the match OR if they created the tournament the match belongs to
+  const { data: match } = await supabase.from('matches').select('created_by, tournament_id').eq('id', matchId).single();
   if (match?.created_by === session.id) return { allowed: true, session };
+
+  if (match?.tournament_id) {
+    const { data: tournament } = await supabase.from('tournaments').select('created_by').eq('id', match.tournament_id).single();
+    if (tournament?.created_by === session.id) return { allowed: true, session };
+  }
 
   return { allowed: false, session };
 };

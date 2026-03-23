@@ -162,13 +162,13 @@ export default function NewTournamentPage() {
     }
   };
 
-  if (session && !session.isAdmin) {
+  if (sessionData && !session) {
     return (
       <div className={styles.unauthorized}>
         <Info size={48} />
-        <h1>Không có quyền truy cập</h1>
-        <p>Thao tác này chỉ dành cho quản trị viên.</p>
-        <Button onClick={() => router.push('/tournaments')}>Quay lại</Button>
+        <h1>Đăng nhập để tiếp tục</h1>
+        <p>Thao tác này yêu cầu tài khoản người dùng.</p>
+        <Button onClick={() => router.push('/login')}>Đăng nhập</Button>
       </div>
     );
   }

@@ -110,8 +110,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.85rem 0.5rem;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
   border: 2px solid var(--border-color);
   border-radius: 0.75rem;
   background-color: var(--bg-primary);
@@ -138,9 +138,23 @@
   font-size: 1.25rem;
 }
 
+.radioText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 .radioTitle {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
+  color: var(--color-text);
+}
+
+.radioDesc {
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 /* Custom config */
@@ -358,4 +372,82 @@
   .userGrid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
+}
+
+@keyframes diceShake {
+  0% { transform: rotate(0); }
+  25% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+  75% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
+}
+
+@keyframes diceSpin {
+  0% { transform: rotate(0deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1.1); }
+}
+
+.spinning {
+  animation: diceSpin 0.5s linear infinite;
+}
+
+@keyframes byeHighlight {
+  0% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-3px); filter: brightness(1.2); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+  100% { transform: translateY(0); filter: brightness(1); }
+}
+
+.byeReveal {
+  animation: byeHighlight 1s ease-in-out infinite;
+  border-color: #10b981 !important;
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.ruleDetailList {
+  margin-top: 0.5rem;
+  padding-left: 1.5rem;
+  list-style-type: square;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ruleDetail {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  line-height: 1.4;
+}
+.emptyShuffleState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background-color: var(--bg-primary);
+  border: 2px dashed var(--border-color);
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  color: var(--color-text-dim);
+}
+
+.emptyShuffleIcon {
+  margin-bottom: 1.5rem;
+  opacity: 0.3;
+  animation: diceShake 2s ease-in-out infinite;
+}
+
+.emptyShuffleSub {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+@keyframes diceShake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(10deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
 }

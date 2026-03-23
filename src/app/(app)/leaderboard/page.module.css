@@ -14,7 +14,7 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   margin-top: 1rem;
   padding-bottom: 2rem;
   border-bottom: 1px solid var(--border-color);
@@ -118,9 +118,8 @@
   .trophyIcon { width: 24px; height: 24px; }
   .subtitle { font-size: 0.875rem; }
   
-  .h2hQuickBtn {
-    width: 100%;
-    justify-content: center;
+  .headerActions {
+    display: none;
   }
 }
 

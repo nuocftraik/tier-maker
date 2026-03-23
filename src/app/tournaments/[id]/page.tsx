@@ -395,7 +395,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <div className={styles.titleInfo}>
               <div className={styles.titleRow}>
                 <h1 className={styles.title}>{tournament?.name || 'Đang tải...'}</h1>
-                <div className={`${styles.statusBadge} ${styles[tournament?.status || '']}`}>
+                <div className={`${styles.statusBadge} ${styles[(tournament?.status || 'draft') + 'Badge']}`}>
                   {tournament?.status === 'draft' ? 'BẢN NHÁP' : 
                    tournament?.status === 'active' ? 'ĐANG DIỄN RA' : 'ĐÃ HOÀN THÀNH'}
                 </div>
@@ -413,11 +413,15 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             <div className={styles.adminActions}>
               {tournament?.status === 'draft' && (
                 <Link href={`/tournaments/${id}/edit`} className={styles.editBtn}>
-                  <Pencil size={18} /> Sửa
+                  <Pencil size={18} /> Sửa Bản Nháp
                 </Link>
               )}
-              <button onClick={() => setIsDeleteModalOpen(true)} className={styles.deleteBtn}>
-                <Trash2 size={18} /> Xóa
+              <button 
+                onClick={() => setIsDeleteModalOpen(true)} 
+                className={styles.deleteBtn}
+                title={tournament?.status === 'completed' ? "Admin có quyền xóa giải đã kết thúc" : "Xóa giải đấu"}
+              >
+                <Trash2 size={18} /> Xóa Giải Đấu
               </button>
             </div>
           )}
@@ -555,11 +559,39 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
             )}
 
             <Card className={styles.sidebarCard}>
-              <h2 className={styles.cardTitle}>Thông tin thêm</h2>
+              <h2 className={styles.cardTitle}>Quy tắc & Thông tin</h2>
               <div className={styles.infoContent}>
                 <p><strong>Thể thức:</strong> {getTypeLabel(tournament?.type)}</p>
-                <p><strong>Chế độ:</strong> {tournament?.match_mode === 'doubles' ? 'Đôi (2v2)' : 'Đơn (1v1)'}</p>
+                <p><strong>Cơ chế:</strong> {tournament?.seeding_mode === 'random' ? '🎲 Bốc thăm ngẫu nhiên' : '✋ Sắp xếp thủ công'}</p>
+                
+                {['elimination', 'custom'].includes(tournament?.type) && (
+                  <>
+                    <p><strong>Số VĐV:</strong> {participants.length}</p>
+                    {(() => {
+                      const isDoubles = tournament?.match_mode === 'doubles';
+                      const entityCount = isDoubles ? Math.ceil(participants.length / 2) : participants.length;
+                      const rounds = Math.ceil(Math.log2(entityCount)) || 1;
+                      const totalSlots = Math.pow(2, rounds);
+                      const byesCount = totalSlots - entityCount;
+                      return (
+                        <>
+                          <p><strong>Nhánh đấu:</strong> {totalSlots} vị trí</p>
+                          {byesCount > 0 && (
+                            <p style={{ color: 'var(--primary-color)', fontWeight: 600 }}>
+                              <strong>Đặc cách (BYE):</strong> {byesCount} suất
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+
+                <p><strong>Trận đấu:</strong> {tournament?.match_mode === 'doubles' ? 'Đôi (2v2)' : 'Đơn (1v1)'}</p>
+                <p><strong>Định dạng:</strong> BO {tournament?.best_of} (Chung kết BO {tournament?.format_config?.final_bo || tournament?.best_of})</p>
+                
                 <p><strong>Người tạo:</strong> {tournament?.created_by_user?.name}</p>
+
                 {tournament?.type === 'custom' && (
                   <>
                     <p><strong>Số bảng:</strong> {tournament.group_count}</p>
@@ -567,9 +599,10 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     <p><strong>Giai đoạn:</strong> {tournament.current_stage === 'group' ? 'Vòng bảng' : 'Loại trực tiếp'}</p>
                   </>
                 )}
+                
                 {tournament?.description && (
                   <div className={styles.descBox}>
-                    <strong>Mô tả:</strong>
+                    <strong>Lưu ý:</strong>
                     <p>{tournament.description}</p>
                   </div>
                 )}

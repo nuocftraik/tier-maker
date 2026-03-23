@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { useWindowSize } from 'react-use';
 import Confetti from 'react-confetti';
@@ -21,6 +22,7 @@ const fetcher = async (url: string) => {
 const TIERS = ['All', 'S', 'A', 'B', 'C', 'D', 'E', 'F', 'Bot', 'Unranked'];
 
 export default function LeaderboardPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState('All');
   const [showConfetti, setShowConfetti] = useState(true);
   const [recycle, setRecycle] = useState(true); // Control flow of new pieces
@@ -74,11 +76,7 @@ export default function LeaderboardPage() {
           </div>
           <p className={styles.subtitle}>Cập nhật thành tích và xếp hạng CLB theo thời gian thực ⚡</p>
         </div>
-        <div className={styles.headerActions}>
-           <Button onClick={() => window.location.href = '/head-to-head'} variant="outline" className={styles.h2hQuickBtn}>
-              <Target size={18} /> So sánh Đối đầu (H2H)
-           </Button>
-        </div>
+
       </header>
 
       <div className={styles.filterSection}>

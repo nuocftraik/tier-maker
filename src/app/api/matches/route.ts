@@ -56,10 +56,20 @@ export async function GET(request: Request) {
       const matchIds = matches.map((m: any) => m.match_id);
       const { data: nativeMatches } = await supabase
         .from('matches')
-        .select('id, set_scores')
+        .select('id, set_scores, is_bye')
         .in('id', matchIds);
 
       if (nativeMatches && nativeMatches.length > 0) {
+        // We filter out BYE matches because they aren't real player-vs-player matches
+        const filteredMatches = matches.filter((m: any) => {
+           const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
+           return !nativeM?.is_bye;
+        });
+
+        // Update the list of matches
+        matches.length = 0;
+        matches.push(...filteredMatches);
+
         matches.forEach((m: any) => {
            const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
            if (nativeM && nativeM.set_scores) {

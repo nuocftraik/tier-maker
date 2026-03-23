@@ -63,6 +63,7 @@ Currently, the club lacks a standardized way to evaluate player skill levels. Th
 - View leaderboard and rankings
 - Vote on other players (click-to-score + drag-and-drop)
 - View personal profile and vote history
+- Create and manage own tournaments
 - Access via mobile and desktop
 
 ### 5.2 Secondary Users — Admins (multiple)
@@ -149,6 +150,7 @@ An admin logs in with admin password → manages members, changes access code, a
 - Automatic bracket generation and match progression logic linking directly to Match History.
 - Custom confirmation modals for critical actions, including pre-flight summaries before Tournament Creation and Start phases.
 - Finalized tournament history highlighting the winner with a prominent Champion badge (🏆 NHÀ VÔ ĐỊCH 🏆).
+- Tournament management (Create/Start/Reset) is available to any club member for their own tournaments, as well as Admins for all tournaments.
 - Standings table and past bracket inspection.
 
 ---

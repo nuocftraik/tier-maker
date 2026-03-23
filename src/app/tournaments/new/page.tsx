@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card/Card';
 import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
-import { Trophy, ArrowLeft, Check, Users, Info, Flag, ChevronRight, ChevronLeft, ArrowRight, Settings } from 'lucide-react';
+import { Trophy, ArrowLeft, Check, Users, Info, Flag, ChevronRight, ChevronLeft, ArrowRight, Settings, Shuffle } from 'lucide-react';
 import styles from './NewTournament.module.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { BracketSeeder } from '@/components/tournament/BracketSeeder';
@@ -43,6 +43,8 @@ export default function NewTournamentPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
+  const [hasShuffled, setHasShuffled] = useState(false);
 
   // Derived Values
   const entityCount = formData.match_mode === 'doubles' ? Math.ceil(selectedParticipants.length / 2) : selectedParticipants.length;
@@ -57,6 +59,26 @@ export default function NewTournamentPage() {
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const shuffleParticipants = () => {
+    setSelectedParticipants(prev => {
+      const arr = [...prev];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    });
+  };
+
+  const handleShuffle = () => {
+    setIsShaking(true);
+    shuffleParticipants();
+    setTimeout(() => {
+      setIsShaking(false);
+      setHasShuffled(true);
+    }, 500);
   };
 
   const getUserById = (id: string) => users.find((u: any) => u.id === id);
@@ -243,10 +265,10 @@ export default function NewTournamentPage() {
                 <Button
                   type="submit"
                   className={styles.submitBtn}
-                  disabled={isSubmitting || selectedParticipants.length < 2}
+                  disabled={isSubmitting || selectedParticipants.length < 2 || (formData.seeding_mode === 'random' && !hasShuffled)}
                   style={{ width: '100%', marginTop: '1rem' }}
                 >
-                  {isSubmitting ? 'Đang khởi tạo...' : 'Hoàn Tất & Bắt Đầu Nháp'}
+                  {isSubmitting ? 'Đang khởi tạo...' : (formData.seeding_mode === 'random' && !hasShuffled ? 'Hãy bốc thăm trước' : 'Hoàn Tất & Bắt Đầu Nháp')}
                 </Button>
               </Card>
             )}
@@ -411,37 +433,172 @@ export default function NewTournamentPage() {
             {step === 3 && (
               <>
                 <Card className={styles.formCard}>
-                  <h2 className={styles.cardTitle}>Phân Cặp & Nhánh Đấu</h2>
-
-                  {byesCount > 0 && ['elimination', 'custom'].includes(formData.type) && (
-                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', color: 'var(--primary-color)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '1.5rem' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontWeight: 'bold' }}>
-                        <Info size={18} />
-                        Lưu ý Cơ chế Đặc Cách (BYE)
-                      </div>
-                      <p style={{ marginTop: '0.5rem', fontSize: '0.95rem' }}>
-                        Dựa trên số lượng tham gia vòng loại trực tiếp <b>({effectiveKnockoutEntities} đội)</b>, nhánh đấu cần <b>{totalSlots} khe trống (slots)</b>.
-                        Do đó, hệ thống sẽ tự động tạo <b>{byesCount} vé ĐẶC CÁCH (BYE)</b>. Đội gặp BYE sẽ nghiễm nhiên được cộng 1 vòng thắng để tiến thẳng vào vòng trong.
-                      </p>
-                    </div>
-                  )}
+                  <h2 className={styles.cardTitle}>Thiết lập & Quy tắc giải</h2>
 
                   <div className={styles.fieldGroup}>
                     <label className={styles.label}>Phương thức Phân hạt giống (Seeding)</label>
                     <div className={styles.radioGroup}>
                       <label className={`${styles.radioCard} ${formData.seeding_mode === 'random' ? styles.radioActive : ''}`}>
-                        <input type="radio" name="seeding_mode" value="random" checked={formData.seeding_mode === 'random'} onChange={() => setFormData({ ...formData, seeding_mode: 'random' })} />
+                        <input type="radio" name="seeding_mode" value="random" checked={formData.seeding_mode === 'random'} onChange={() => { setFormData({ ...formData, seeding_mode: 'random' }); setHasShuffled(false); }} />
                         <span className={styles.radioEmoji}>🎲</span>
-                        <span className={styles.radioTitle}>Auto / Ngẫu nhiên</span>
+                        <div className={styles.radioText}>
+                          <span className={styles.radioTitle}>Auto / Ngẫu nhiên</span>
+                          <span className={styles.radioDesc}>Hệ thống tự bốc thăm vị trí và suất đặc cách</span>
+                        </div>
                       </label>
                       <label className={`${styles.radioCard} ${formData.seeding_mode === 'manual' ? styles.radioActive : ''}`}>
                         <input type="radio" name="seeding_mode" value="manual" checked={formData.seeding_mode === 'manual'} onChange={() => setFormData({ ...formData, seeding_mode: 'manual' })} />
                         <span className={styles.radioEmoji}>✋</span>
-                        <span className={styles.radioTitle}>Tôi muốn tự sắp xếp</span>
+                        <div className={styles.radioText}>
+                          <span className={styles.radioTitle}>Tôi muốn tự sắp xếp</span>
+                          <span className={styles.radioDesc}>Kéo thả người chơi vào từng cặp đấu cụ thể</span>
+                        </div>
                       </label>
                     </div>
                   </div>
+
+                  {/* Rules Summary Card */}
+                  <div style={{ marginTop: '1.5rem', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--primary-color)', background: 'rgba(56, 189, 248, 0.05)' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)' }}>
+                      <Flag size={18} /> Quy trình vận hành ({getTypeLabel(formData.type)})
+                    </h3>
+                    
+                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', padding: 0, listStyle: 'none', fontSize: '0.95rem' }}>
+                      <li style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                        <span><b>Cơ chế phân hạt giống:</b> Thứ tự trong danh sách sẽ quyết định vị trí cặp đấu.
+                          <ul className={styles.ruleDetailList}>
+                            <li className={styles.ruleDetail}>Chọn "Ngẫu nhiên" để hệ thống tự trộn vị trí công bằng.</li>
+                            <li className={styles.ruleDetail}>Chọn "Tự sắp xếp" nếu bạn muốn ưu tiên các cặp đấu cụ thể hoặc chủ động chọn người nhận suất Đặc cách.</li>
+                          </ul>
+                        </span>
+                      </li>
+                      
+                      {['elimination', 'custom'].includes(formData.type) && (
+                        <li style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                          <span>
+                            <b>Xử lý Đặc cách (BYE):</b> Với {effectiveKnockoutEntities} đội, hệ thống tự bù BYE để đủ sơ đồ {totalSlots}.
+                            <ul className={styles.ruleDetailList}>
+                              <li className={styles.ruleDetail}>BYE được tính toán để đảm bảo nhánh đấu cân bằng nhất (không bị lệch quá nhiều trận ở một phía).</li>
+                              <li className={styles.ruleDetail}>Những người được gán BYE sẽ không cần đánh vòng đầu và tiến thẳng vào vòng sau.</li>
+                            </ul>
+                          </span>
+                        </li>
+                      )}
+
+                      {formData.type === 'round_robin' && (
+                        <li style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                          <span>
+                            <b>Luật xếp hạng Vòng tròn:</b>
+                            <ul className={styles.ruleDetailList}>
+                              <li className={styles.ruleDetail}>Tính điểm: Thắng 3đ, Hòa 1đ (nếu có), Thua 0đ.</li>
+                              <li className={styles.ruleDetail}>Khi bằng điểm: Xét kết quả Đối đầu giữa 2 bên, sau đó đến Hiệu số tập (Set) và Điểm số.</li>
+                            </ul>
+                          </span>
+                        </li>
+                      )}
+
+                      {formData.type === 'custom' && (
+                        <li style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                          <span>
+                            <b>Vòng bảng → Loại trực tiếp:</b>
+                            <ul className={styles.ruleDetailList}>
+                              <li className={styles.ruleDetail}>Chọn ra những đội đứng đầu mỗi bảng để vào vòng Knockout.</li>
+                              <li className={styles.ruleDetail}>Hệ thống ưu tiên rải hạt giống để các đối thủ mạnh không gặp nhau quá sớm ở vòng loại.</li>
+                            </ul>
+                          </span>
+                        </li>
+                      )}
+
+                      <li style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                        <span><b>Sự cố và Vắng mặt:</b>
+                           <ul className={styles.ruleDetailList}>
+                              <li className={styles.ruleDetail}>VĐV vắng mặt sẽ được tính thua cuộc (Walkover) để giải đấu tiếp tục diễn ra.</li>
+                              <li className={styles.ruleDetail}>Bạn có thể xóa và tạo lại sơ đồ (Regenerate) bất kỳ lúc nào nếu trận đấu đầu tiên chưa bắt đầu.</li>
+                           </ul>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                 </Card>
+
+                {/* Random Seed Preview */}
+                {formData.seeding_mode === 'random' && (
+                  <Card className={styles.participantCard} style={{ marginTop: '1.5rem' }}>
+                    <div className={styles.participantHeader}>
+                      <h2 className={styles.cardTitle}>🎲 Kết quả Bốc thăm Dự kiến</h2>
+                      <Button type="button" variant="outline" size="sm" onClick={handleShuffle} disabled={isShaking}>
+                        <Shuffle size={14} style={{ marginRight: 6 }} className={isShaking ? styles.spinning : ''} /> 
+                        {isShaking ? 'Đang quay...' : (hasShuffled ? 'Bốc thăm lại' : 'Bắt đầu bốc thăm')}
+                      </Button>
+                    </div>
+
+                    {!hasShuffled ? (
+                      <div className={styles.emptyShuffleState}>
+                        <Shuffle size={48} className={styles.emptyShuffleIcon} />
+                        <p>Danh sách thi đấu đang được giữ bí mật.</p>
+                        <p className={styles.emptyShuffleSub}>Hãy nhấn <b>Bốc thăm</b> để công bố các cặp đấu và suất Đặc cách!</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ padding: '0.5rem', marginBottom: '1rem', background: '#ecfdf5', borderRadius: '8px', border: '1px solid #10b981', display: isShaking ? 'none' : 'flex', alignItems: 'center', gap: '0.5rem', color: '#047857', fontSize: '0.85rem', fontWeight: 600 }}>
+                          <Trophy size={14} /> Chúc mừng các VĐV/Đội đã nhận suất Đặc cách (BYE)!
+                        </div>
+                        <div className={styles.seedList}>
+                          {(() => {
+                            const players = selectedParticipants.map(uid => getUserById(uid)).filter(Boolean) as any[];
+                            const isDoubles = formData.match_mode === 'doubles';
+                            const entityCount = isDoubles ? Math.ceil(players.length / 2) : players.length;
+                            
+                            // How many squads get BYE?
+                            const rounds = Math.ceil(Math.log2(entityCount)) || 1;
+                            const totalSlots = Math.pow(2, rounds);
+                            const byesCount = totalSlots - entityCount;
+
+                            if (isDoubles) {
+                              const teams: any[][] = [];
+                              for (let i = 0; i < players.length; i += 2) {
+                                const team = [players[i]];
+                                if (i + 1 < players.length) team.push(players[i+1]);
+                                teams.push(team);
+                              }
+                              return teams.map((team, idx) => {
+                                const isBye = idx < byesCount && (formData.type === 'elimination' || formData.type === 'custom');
+                                return (
+                                  <div key={idx} className={`${styles.seedItem} ${isBye ? styles.byeReveal : ''}`} style={{ cursor: 'default' }}>
+                                    <span className={styles.seedNumber}>{idx + 1}</span>
+                                    <div className={styles.seedName} style={{ display: 'flex', gap: '0.5rem' }}>
+                                      {team.map(p => p.name).join(' & ')}
+                                    </div>
+                                    {isBye && <span className={styles.groupTag} style={{ background: 'var(--success-color)', color: 'white' }}>✨ Đặc cách (BYE)</span>}
+                                  </div>
+                                );
+                              });
+                            }
+
+                            return players.map((player, idx) => {
+                              const isBye = idx < byesCount && (formData.type === 'elimination' || formData.type === 'custom');
+                              return (
+                                <div key={player.id} className={`${styles.seedItem} ${isBye ? styles.byeReveal : ''}`} style={{ cursor: 'default' }}>
+                                  <span className={styles.seedNumber}>{idx + 1}</span>
+                                  <span className={styles.seedName}>{player.name}</span>
+                                  {isBye && <span className={styles.groupTag} style={{ background: 'var(--success-color)', color: 'white' }}>✨ Đặc cách (BYE)</span>}
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                        <p style={{ marginTop: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          * Kết quả bốc thăm này sẽ được sử dụng chính thức khi bạn nhấn "Khởi tạo Bản nháp".
+                        </p>
+                      </>
+                    )}
+                  </Card>
+                )}
 
                 {/* Manual Seed Widgets */}
                 {formData.seeding_mode === 'manual' && formData.type === 'custom' && (
@@ -481,6 +638,19 @@ export default function NewTournamentPage() {
                 </Button>
               )}
             </div>
+
+            {/* Hint for BYE selection */}
+            {step === 3 && formData.seeding_mode === 'random' && !hasShuffled && (
+              <p style={{ marginTop: '1rem', color: '#f59e0b', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <Info size={16} /> Vui lòng nhấn <b>"Bốc thăm"</b> bên dưới để xác định danh sách Đặc cách trước khi tạo giải.
+              </p>
+            )}
+
+            {step === 3 && formData.seeding_mode === 'manual' && (
+              <p style={{ marginTop: '1rem', color: 'var(--primary-color)', fontSize: '0.85rem', textAlign: 'center', background: 'rgba(56, 189, 248, 0.1)', padding: '0.5rem', borderRadius: '8px' }}>
+                💡 <b>Mẹo:</b> Những người nằm ở <b>{byesCount} vị trí đầu tiên</b> trong bảng danh sách {formData.type === 'custom' ? 'mỗi bảng' : ''} sẽ nhận suất Đặc cách (BYE).
+              </p>
+            )}
 
           </div>
         </form>

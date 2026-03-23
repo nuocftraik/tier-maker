@@ -147,11 +147,15 @@ const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean
             )}
           </div>
           <div className={styles.scoreInfo}>
-            <div className={styles.score}>{match.team_a_score}</div>
-            {match.set_scores && match.set_scores.length > 0 && (
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                ({match.set_scores.map(s => s.a).join(', ')})
-              </div>
+            {!match.is_bye && (
+              <>
+                <div className={styles.score}>{match.team_a_score}</div>
+                {match.set_scores && match.set_scores.length > 0 && (
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    ({match.set_scores.map(s => s.a).join(', ')})
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -164,6 +168,7 @@ const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean
             <div className={styles.playerInfo}>
               <span className={styles.placeholder} style={{ color: 'var(--primary-color)', fontStyle: 'italic', fontSize: '0.85rem' }}>✨ Đặc cách (BYE)</span>
             </div>
+            {/* No score shown for BYE side */}
           </div>
         ) : (
           <div className={`${styles.playerRow} ${isPlayed && isTeamBWinner ? styles.winner : ''} ${isPlayed && !isTeamBWinner && match.team_b?.length > 0 ? styles.loser : ''}`}>

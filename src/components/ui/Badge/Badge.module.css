@@ -2,39 +2,48 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
   border-radius: var(--radius-sm);
   text-transform: uppercase;
-  color: #fff; /* Most badges look good with white text, or dynamic based on bg */
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Good for contrast */
+  color: #fff;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  line-height: 1;
 }
 
 /* Sizes */
 .size-sm {
-  padding: 0.125rem 0.375rem;
-  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
 }
 .size-md {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
 }
 .size-lg {
-  padding: 0.375rem 0.75rem;
-  font-size: 1rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
 }
 
-/* Tier Specific Colors */
-.badge-s { background-color: var(--tier-s); }
-.badge-a { background-color: var(--tier-a); }
-.badge-b { background-color: var(--tier-b); }
-.badge-c { background-color: var(--tier-c); }
-.badge-d { background-color: var(--tier-d); }
-.badge-e { background-color: var(--tier-e); }
-.badge-f { background-color: var(--tier-f); }
-.badge-bot { background-color: var(--tier-bot); }
-.badge-unranked { background-color: var(--tier-unranked); }
+/* Tier Specific Colors & Effects */
+.badge-s { 
+  background: var(--tier-s); 
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+}
+.badge-a { background: var(--tier-a); }
+.badge-b { background: var(--tier-b); }
+.badge-c { background: var(--tier-c); }
+.badge-d { background: var(--tier-d); }
+.badge-e { background: var(--tier-e); }
+.badge-f { background: var(--tier-f); }
+.badge-bot { background: var(--tier-bot); }
+.badge-unranked { 
+  background: rgba(255, 255, 255, 0.05); 
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
 
 .special {
-  box-shadow: var(--shadow-md);
-  letter-spacing: 0.05em;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
 }

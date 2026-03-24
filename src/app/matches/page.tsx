@@ -107,7 +107,7 @@ export default function MatchesFeedPage() {
         </div>
 
         <div className={styles.searchGroup}>
-          <Search size={16} />
+          <Search size={18} strokeWidth={2.5} />
           <select 
             className={styles.userSelect}
             value={selectedUser}

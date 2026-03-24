@@ -2,27 +2,32 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 1rem;
-  margin: 3rem 0;
-  min-height: 280px;
+  gap: 1.5rem;
+  margin: 1rem 0 2rem;
+  min-height: 320px;
 }
 
 .emptySlot {
-  width: 120px;
+  width: 140px;
 }
 
 .podiumItem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 130px;
+  width: 160px;
   position: relative;
 }
 
 .avatarWrapper {
   position: relative;
   z-index: 10;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  transition: transform 0.3s ease;
+}
+
+.podiumItem:hover .avatarWrapper {
+  transform: scale(1.1) translateY(-5px);
 }
 
 .profileLink {
@@ -31,20 +36,15 @@
   align-items: center;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s;
-}
-
-.profileLink:hover {
-  transform: translateY(-5px);
 }
 
 .crownIcon {
   position: absolute;
-  top: -24px;
+  top: -28px;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--tier-s-gold);
-  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.4));
+  color: #fbbf24;
+  filter: drop-shadow(0 4px 10px rgba(251, 191, 36, 0.6));
   animation: float 3s ease-in-out infinite;
   z-index: 20;
 }
@@ -53,38 +53,41 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
 }
 
 .name {
-  font-weight: 700;
-  font-size: 1.125rem;
+  font-weight: 900;
+  font-size: 1.4rem;
   color: var(--text-primary);
   text-align: center;
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .badge {
-  margin-bottom: 0.25rem;
+  transform: scale(1.1);
 }
 
 .score {
-  font-family: var(--font-mono);
-  font-weight: 800;
-  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.75rem;
   color: var(--color-primary);
+  line-height: 1;
 }
 
 .scoreLabel {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .votes {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .pedestal {
@@ -97,19 +100,19 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-heading);
-  font-weight: 800;
+  font-weight: 950;
   color: var(--text-muted);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
 }
 
 /* Specific pedestal heights */
-.firstPlace .pedestal { height: 100px; font-size: 2rem; color: var(--tier-s-gold); border-color: rgba(255, 215, 0, 0.3); background: linear-gradient(180deg, rgba(255, 215, 0, 0.1) 0%, var(--bg-card) 100%); }
-.secondPlace .pedestal { height: 75px; font-size: 1.5rem; }
-.thirdPlace .pedestal { height: 50px; font-size: 1.25rem; }
+.firstPlace .pedestal { height: 130px; font-size: 3rem; color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); background: linear-gradient(180deg, rgba(251, 191, 36, 0.15) 0%, var(--bg-card) 100%); }
+.secondPlace .pedestal { height: 95px; font-size: 2.25rem; }
+.thirdPlace .pedestal { height: 65px; font-size: 1.75rem; }
 
 /* Scale up the winner slightly */
 .firstPlace {
-  width: 150px;
+  width: 200px;
   z-index: 5;
 }
 

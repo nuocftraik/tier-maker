@@ -4,8 +4,17 @@
   align-items: center;
   justify-content: center;
   border: 2px solid var(--border-color);
+  background-color: var(--bg-hover);
   flex-shrink: 0;
   overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.container:hover {
+  border-color: var(--color-primary-light);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
 }
 
 /* Shapes */
@@ -13,29 +22,29 @@
   border-radius: var(--radius-full);
 }
 .shape-square {
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 }
 
 /* Sizes */
 .size-sm {
   width: 32px;
   height: 32px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 .size-md {
-  width: 48px;
-  height: 48px;
-  font-size: 1rem;
+  width: 44px;
+  height: 44px;
+  font-size: 0.9rem;
 }
 .size-lg {
-  width: 64px;
-  height: 64px;
-  font-size: 1.25rem;
+  width: 60px;
+  height: 60px;
+  font-size: 1.1rem;
 }
 .size-xl {
-  width: 96px;
-  height: 96px;
-  font-size: 2rem;
+  width: 100px;
+  height: 100px;
+  font-size: 1.8rem;
 }
 
 .image {
@@ -44,29 +53,15 @@
 
 .fallback {
   color: var(--text-secondary);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   user-select: none;
 }
 
-/* S Tier Effects Placeholder */
+/* S Tier Effects */
 .fireEffect {
   animation: fire-border 2s ease-in-out infinite alternate;
-  border: 2px solid #ff3b30; 
-}
-
-@keyframes fire-border {
-  0% {
-    box-shadow: 0 0 10px #ff3b30, inset 0 0 5px #ff3b30;
-    border-color: #ff3b30;
-  }
-  50% {
-    box-shadow: 0 0 20px #ff9500, inset 0 0 10px #ff9500;
-    border-color: #ff9500;
-  }
-  100% {
-    box-shadow: 0 0 15px #ff3b30, inset 0 0 8px #ff3b30;
-    border-color: #ff3b30;
-  }
+  border: 2.5px solid var(--tier-s); 
 }
 
 .sparkleEffect {
@@ -74,7 +69,27 @@
   top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   background-image: radial-gradient(circle, #fff 10%, transparent 20%);
-  background-size: 4px 4px;
-  opacity: 0.3;
-  animation: float 2s infinite ease-in-out;
+  background-size: 6px 6px;
+  opacity: 0.2;
+  animation: sparkle-anim 3s infinite linear;
+}
+
+@keyframes sparkle-anim {
+  from { background-position: 0 0; }
+  to { background-position: 24px 24px; }
+}
+
+@keyframes fire-border {
+  0% {
+    box-shadow: 0 0 10px var(--tier-s), inset 0 0 5px var(--tier-s);
+    border-color: var(--tier-s);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--tier-s-gold), inset 0 0 10px var(--tier-s-gold);
+    border-color: var(--tier-s-gold);
+  }
+  100% {
+    box-shadow: 0 0 15px var(--tier-s), inset 0 0 8px var(--tier-s);
+    border-color: var(--tier-s);
+  }
 }

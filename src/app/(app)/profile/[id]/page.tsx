@@ -81,21 +81,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         <StatsCard profile={data} matchStats={matchStats} />
         
         {/* Toggle View */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+        <div className={styles.tabs}>
           <button 
             onClick={() => setActiveTab('matches')} 
-            style={{ fontWeight: 600, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
-              background: activeTab === 'matches' ? 'var(--primary-color)' : 'transparent',
-              color: activeTab === 'matches' ? 'white' : 'var(--text-color)'
-            }}>
+            className={`${styles.tab} ${activeTab === 'matches' ? styles.activeTab : ''}`}>
             Lịch sử Đấu ({matchStats.total})
           </button>
           <button 
             onClick={() => setActiveTab('votes')}
-            style={{ fontWeight: 600, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
-              background: activeTab === 'votes' ? 'var(--primary-color)' : 'transparent',
-              color: activeTab === 'votes' ? 'white' : 'var(--text-color)'
-            }}>
+            className={`${styles.tab} ${activeTab === 'votes' ? styles.activeTab : ''}`}>
             Lịch sử Vote ({data?.votesHistory?.length || 0})
           </button>
         </div>

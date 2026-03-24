@@ -1,21 +1,21 @@
 :root {
   /* Brand Colors */
-  --color-primary: #2979FF;
-  --color-primary-light: #82B1FF;
-  --color-primary-dark: #1565C0;
+  --color-primary: #2563EB;
+  --color-primary-light: #60A5FA;
+  --color-primary-dark: #1E40AF;
   --color-on-primary: #FFFFFF;
 
-  /* Tier Colors */
-  --tier-s: #FF1744;
-  --tier-s-gold: #FFD700;
-  --tier-a: #FF6D00;
-  --tier-b: #FFD600;
-  --tier-c: #00C853;
-  --tier-d: #2979FF;
-  --tier-e: #AA00FF;
-  --tier-f: #78909C;
-  --tier-bot: #37474F;
-  --tier-unranked: #546E7A;
+  /* Tier Colors (Slightly adjusted for light mode contrast) */
+  --tier-s: #EF4444;
+  --tier-s-gold: #EAB308;
+  --tier-a: #F97316;
+  --tier-b: #EAB308;
+  --tier-c: #10B981;
+  --tier-d: #3B82F6;
+  --tier-e: #8B5CF6;
+  --tier-f: #64748B;
+  --tier-bot: #475569;
+  --tier-unranked: #64748B;
 
   /* Light Theme Specifics */
   --bg-primary: #F8FAFC;
@@ -24,13 +24,14 @@
   --bg-hover: #F1F5F9;
   
   --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-on-dark: #FFFFFF; /* High contrast white for dark backgrounds */
 
   --border-color: #E2E8F0;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.06);
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;

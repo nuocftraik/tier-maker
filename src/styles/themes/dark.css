@@ -1,12 +1,13 @@
 [data-theme='dark'] {
   --bg-primary: #0D1117;
-  --bg-secondary: #161B22;
-  --bg-card: #1C2333;
+  --bg-secondary: #010409;
+  --bg-card: #161B22;
   --bg-hover: #21262D;
 
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
+  --text-on-dark: #FFFFFF;
 
   --border-color: #30363D;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);

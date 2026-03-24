@@ -29,10 +29,11 @@ interface BracketProps {
   matches: Match[];
   tournamentId: string;
   canEdit?: boolean;
+  sessionUserId?: string;
   onMatchClick?: (match: Match) => void;
 }
 
-export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId, canEdit = false, onMatchClick }) => {
+export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId, canEdit = false, sessionUserId, onMatchClick }) => {
   // Group matches by round
   const rounds: Record<number, Match[]> = {};
   matches.forEach(match => {
@@ -64,7 +65,7 @@ export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId, canEdit
               {rounds[roundNum]
                 .sort((a, b) => a.match_order - b.match_order)
                 .map(match => (
-                  <MatchCard key={match.match_id} match={match} tournamentId={tournamentId} canEdit={canEdit} onMatchClick={onMatchClick} />
+                  <MatchCard key={match.match_id} match={match} tournamentId={tournamentId} canEdit={canEdit} sessionUserId={sessionUserId} onMatchClick={onMatchClick} />
                 ))}
             </div>
           </div>
@@ -111,13 +112,16 @@ export const Bracket: React.FC<BracketProps> = ({ matches, tournamentId, canEdit
   );
 };
 
-const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean; onMatchClick?: (match: Match) => void }> = ({ match, tournamentId, canEdit, onMatchClick }) => {
+const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean; sessionUserId?: string; onMatchClick?: (match: Match) => void }> = ({ match, tournamentId, canEdit, sessionUserId, onMatchClick }) => {
   const isTeamAWinner = match.team_a_score > match.team_b_score;
   const isTeamBWinner = match.team_b_score > match.team_a_score;
   const isPlayed = match.team_a_score !== 0 || match.team_b_score !== 0;
 
   const handleClick = () => {
-    if (canEdit && match.team_a?.length > 0 && match.team_b?.length > 0) {
+    const isParticipant = match.team_a?.some(p => p.id === sessionUserId) || match.team_b?.some(p => p.id === sessionUserId);
+    const userCanEdit = canEdit || isParticipant;
+
+    if (userCanEdit && match.team_a?.length > 0 && match.team_b?.length > 0) {
       if (onMatchClick) onMatchClick(match);
     }
   };
@@ -125,10 +129,10 @@ const MatchCard: React.FC<{ match: Match; tournamentId: string; canEdit: boolean
   return (
     <div className={styles.matchItem}>
       <div 
-        className={`${styles.matchBox} ${canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? styles.clickable : ''}`}
+        className={`${styles.matchBox} ${(canEdit || (match.team_a?.some(p => p.id === sessionUserId) || match.team_b?.some(p => p.id === sessionUserId))) && match.team_a?.length > 0 && match.team_b?.length > 0 ? styles.clickable : ''}`}
         onClick={handleClick}
-        style={{ cursor: canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? 'pointer' : 'default' }}
-        title={canEdit && match.team_a?.length > 0 && match.team_b?.length > 0 ? "Click để cập nhật tỉ số" : ""}
+        style={{ cursor: (canEdit || (match.team_a?.some(p => p.id === sessionUserId) || match.team_b?.some(p => p.id === sessionUserId))) && match.team_a?.length > 0 && match.team_b?.length > 0 ? 'pointer' : 'default' }}
+        title={(canEdit || (match.team_a?.some(p => p.id === sessionUserId) || match.team_b?.some(p => p.id === sessionUserId))) && match.team_a?.length > 0 && match.team_b?.length > 0 ? "Click để cập nhật tỉ số" : ""}
       >
         {/* Team A */}
         <div className={`${styles.playerRow} ${isPlayed && isTeamAWinner ? styles.winner : ''} ${isPlayed && !isTeamAWinner && match.team_a?.length > 0 ? styles.loser : ''}`}>

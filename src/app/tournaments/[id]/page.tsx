@@ -233,11 +233,16 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                     )) || 'TBD'}
                   </div>
                 </div>
-                {canManage && tournament.status !== 'draft' && match.team_a?.length > 0 && match.team_b?.length > 0 && (
-                  <button onClick={() => setEditingMatch(match)} className={styles.recordBtn}>
-                    {match.team_a_score > 0 || match.team_b_score > 0 ? 'Sửa điểm' : 'Ghi kết quả'}
-                  </button>
-                )}
+                {(() => {
+                  const isParticipant = match.team_a?.some((p: any) => p.id === session?.id) || match.team_b?.some((p: any) => p.id === session?.id);
+                  const canEditThisMatch = (canManage || isParticipant) && tournament.status !== 'draft';
+                  
+                  return canEditThisMatch && match.team_a?.length > 0 && match.team_b?.length > 0 && (
+                    <button onClick={() => setEditingMatch(match)} className={styles.recordBtn}>
+                      {match.team_a_score > 0 || match.team_b_score > 0 ? 'Sửa điểm' : 'Ghi kết quả'}
+                    </button>
+                  );
+                })()}
               </div>
             ))}
           </div>
@@ -276,6 +281,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                 matches={matches} 
                 tournamentId={id} 
                 canEdit={canManage && tournament.status !== 'draft'} 
+                sessionUserId={session?.id}
                 onMatchClick={(m: any) => setEditingMatch(m)} 
               />
             </>
@@ -371,6 +377,7 @@ export default function TournamentDetailsPage({ params }: { params: Promise<{ id
                 matches={knockoutMatches} 
                 tournamentId={id} 
                 canEdit={canManage && tournament.status !== 'draft'} 
+                sessionUserId={session?.id}
                 onMatchClick={(m: any) => setEditingMatch(m)} 
               />
             </div>

@@ -104,6 +104,11 @@ export default function EditMatchPage() {
           Sửa trận đấu
         </h1>
         <p className={styles.subtitle}>Chỉnh sửa lại thông tin trận đấu</p>
+        {matchData.match.creator_name && (
+          <p className={styles.creatorInfo}>
+            Bản ghi được tạo bởi: <strong>{matchData.match.creator_name}</strong>
+          </p>
+        )}
       </div>
 
       <div className={styles.card}>

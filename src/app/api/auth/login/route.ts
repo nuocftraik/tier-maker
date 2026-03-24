@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       id: userData.id,
       name: userData.name,
       avatar_url: userData.avatar_url,
-      isAdmin: userData.is_admin,
+      isAdmin: false, // Luôn là false khi đăng nhập qua flow thành viên
     };
 
     const token = await encrypt(sessionPayload);

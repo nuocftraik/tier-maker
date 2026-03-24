@@ -140,7 +140,8 @@ export default function MatchesFeedPage() {
             const isTeamAWinner = match.team_a_score > match.team_b_score;
             const isTeamBWinner = match.team_b_score > match.team_a_score;
             const isDraw = (match.team_a_score === match.team_b_score) && match.team_a_score > 0;
-            const canEdit = session && (session.isAdmin || session.id === match.created_by) && !match.tournament_id;
+            const isParticipant = match.team_a?.some((p: any) => p.id === session?.id) || match.team_b?.some((p: any) => p.id === session?.id);
+            const canEdit = session && (session.isAdmin || session.id === match.created_by || isParticipant) && !match.tournament_id;
 
             return (
               <div key={match.match_id} className={styles.matchCard}>
@@ -155,6 +156,11 @@ export default function MatchesFeedPage() {
                     <span className={styles.matchDate}>
                       <Calendar size={14} /> {formatDate(match.created_at)}
                     </span>
+                    {match.creator_name && (
+                      <span className={styles.matchCreator} title="Người ghi nhận">
+                        👤 {match.creator_name}
+                      </span>
+                    )}
                     {match.tournament_id && (
                       <Link href={`/tournaments/${match.tournament_id}`} className={styles.tournamentTag} style={{ textDecoration: 'none' }} title="Đến giải đấu">
                         🏆 {match.tournament_name || 'Giải đấu'}

@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       const matchIds = matches.map((m: any) => m.match_id);
       const { data: nativeMatches } = await supabase
         .from('matches')
-        .select('id, set_scores, is_bye')
+        .select('id, set_scores, is_bye, created_by:users(name)')
         .in('id', matchIds);
 
       if (nativeMatches && nativeMatches.length > 0) {
@@ -72,8 +72,9 @@ export async function GET(request: Request) {
 
         matches.forEach((m: any) => {
            const nativeM = nativeMatches.find((nm: any) => nm.id === m.match_id);
-           if (nativeM && nativeM.set_scores) {
-               m.set_scores = nativeM.set_scores;
+           if (nativeM) {
+             if (nativeM.set_scores) m.set_scores = nativeM.set_scores;
+             if (nativeM.created_by) m.creator_name = (nativeM.created_by as any).name;
            }
         });
       }

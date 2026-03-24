@@ -13,10 +13,14 @@ const checkPermission = async (matchId: string) => {
 
   if (session.isAdmin) return { allowed: true, session };
 
-  // Check if they created the match OR if they created the tournament the match belongs to
+  // Check if they created the match OR if they are a participant
   const { data: match } = await supabase.from('matches').select('created_by, tournament_id').eq('id', matchId).single();
   if (match?.created_by === session.id) return { allowed: true, session };
 
+  const { data: isPart } = await supabase.from('match_participants').select('user_id').eq('match_id', matchId).eq('user_id', session.id).single();
+  if (isPart) return { allowed: true, session };
+
+  // Check if they created the tournament the match belongs to
   if (match?.tournament_id) {
     const { data: tournament } = await supabase.from('tournaments').select('created_by').eq('id', match.tournament_id).single();
     if (tournament?.created_by === session.id) return { allowed: true, session };
@@ -39,7 +43,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
     // Fetch set scores natively if match_details view hasn't been updated
     const { data: nativeMatch } = await supabase
       .from('matches')
-      .select('set_scores, best_of, is_bye')
+      .select('set_scores, best_of, is_bye, created_by:users(name)')
       .eq('id', params.id)
       .single();
 
@@ -47,6 +51,7 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
       if (nativeMatch.set_scores) match.set_scores = nativeMatch.set_scores;
       if (nativeMatch.best_of) match.best_of = nativeMatch.best_of;
       if (nativeMatch.is_bye !== undefined) match.is_bye = nativeMatch.is_bye;
+      if (nativeMatch.created_by) match.creator_name = (nativeMatch.created_by as any).name;
     }
 
     return NextResponse.json({ match });

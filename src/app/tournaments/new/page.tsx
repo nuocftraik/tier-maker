@@ -466,22 +466,40 @@ export default function NewTournamentPage() {
                     <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', padding: 0, listStyle: 'none', fontSize: '0.95rem' }}>
                       <li style={{ display: 'flex', gap: '0.5rem' }}>
                         <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
-                        <span><b>Cơ chế phân hạt giống:</b> Thứ tự trong danh sách sẽ quyết định vị trí cặp đấu.
+                        <span><b>Cơ chế phân hạt giống:</b> Thứ tự trong danh sách sẽ quyết định vị trí {formData.type === 'custom' ? 'bảng đấu' : 'cặp đấu'}.
                           <ul className={styles.ruleDetailList}>
                             <li className={styles.ruleDetail}>Chọn "Ngẫu nhiên" để hệ thống tự trộn vị trí công bằng.</li>
-                            <li className={styles.ruleDetail}>Chọn "Tự sắp xếp" nếu bạn muốn ưu tiên các cặp đấu cụ thể hoặc chủ động chọn người nhận suất Đặc cách.</li>
+                            <li className={styles.ruleDetail}>Chọn "Tự sắp xếp" nếu bạn muốn chủ động chọn {formData.type === 'custom' ? 'bảng đấu cho từng người' : 'suất Đặc cách hoặc các cặp đấu cụ thể'}.</li>
                           </ul>
                         </span>
                       </li>
+
+                      {formData.type === 'custom' && (
+                        <li style={{ display: 'flex', gap: '0.5rem' }}>
+                          <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
+                          <span>
+                            <b>Vòng bảng → Loại trực tiếp:</b>
+                            <ul className={styles.ruleDetailList}>
+                              <li className={styles.ruleDetail}>VĐV được chia vào {formData.group_count} bảng đấu. Các trận trong bảng đánh BO{formData.group_bo}.</li>
+                              <li className={styles.ruleDetail}>Chọn ra {formData.advance_per_group} người đứng đầu mỗi bảng để vào vòng Knockout.</li>
+                              <li className={styles.ruleDetail}>Hệ thống ưu tiên rải hạt giống để các đối thủ mạnh không gặp nhau quá sớm ở vòng loại.</li>
+                            </ul>
+                          </span>
+                        </li>
+                      )}
                       
                       {['elimination', 'custom'].includes(formData.type) && (
                         <li style={{ display: 'flex', gap: '0.5rem' }}>
                           <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
                           <span>
-                            <b>Xử lý Đặc cách (BYE):</b> Với {effectiveKnockoutEntities} đội, hệ thống tự bù BYE để đủ sơ đồ {totalSlots}.
+                            <b>Vòng Loại trực tiếp (Knockout):</b>
                             <ul className={styles.ruleDetailList}>
-                              <li className={styles.ruleDetail}>BYE được tính toán để đảm bảo nhánh đấu cân bằng nhất (không bị lệch quá nhiều trận ở một phía).</li>
-                              <li className={styles.ruleDetail}>Những người được gán BYE sẽ không cần đánh vòng đầu và tiến thẳng vào vòng sau.</li>
+                              <li className={styles.ruleDetail}>Đánh theo sơ đồ {totalSlots} vị trí. Trận Knockout: BO{formData.best_of}, Chung kết: BO{formData.final_bo}.</li>
+                              {byesCount > 0 && (
+                                <li className={styles.ruleDetail}>
+                                  <b>Xử lý Đặc cách (BYE):</b> Với {effectiveKnockoutEntities} đội, hệ thống tự bù {byesCount} suất BYE để cân bằng sơ đồ.
+                                </li>
+                              )}
                             </ul>
                           </span>
                         </li>
@@ -494,20 +512,7 @@ export default function NewTournamentPage() {
                             <b>Luật xếp hạng Vòng tròn:</b>
                             <ul className={styles.ruleDetailList}>
                               <li className={styles.ruleDetail}>Tính điểm: Thắng 3đ, Hòa 1đ (nếu có), Thua 0đ.</li>
-                              <li className={styles.ruleDetail}>Khi bằng điểm: Xét kết quả Đối đầu giữa 2 bên, sau đó đến Hiệu số tập (Set) và Điểm số.</li>
-                            </ul>
-                          </span>
-                        </li>
-                      )}
-
-                      {formData.type === 'custom' && (
-                        <li style={{ display: 'flex', gap: '0.5rem' }}>
-                          <Check size={16} style={{ color: 'var(--success-color)', flexShrink: 0, marginTop: 4 }} />
-                          <span>
-                            <b>Vòng bảng → Loại trực tiếp:</b>
-                            <ul className={styles.ruleDetailList}>
-                              <li className={styles.ruleDetail}>Chọn ra những đội đứng đầu mỗi bảng để vào vòng Knockout.</li>
-                              <li className={styles.ruleDetail}>Hệ thống ưu tiên rải hạt giống để các đối thủ mạnh không gặp nhau quá sớm ở vòng loại.</li>
+                              <li className={styles.ruleDetail}>Khi bằng điểm: Xét kết quả Đối đầu giữa 2 bên, sau đó đến Hiệu số hiệp (Set) và Điểm số.</li>
                             </ul>
                           </span>
                         </li>

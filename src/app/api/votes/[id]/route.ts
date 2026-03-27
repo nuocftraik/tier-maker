@@ -22,11 +22,10 @@ export async function DELETE(
     }
 
     // Security check: only allow deleting if the user is the owner (voter)
-    // Or if they are admin (optional).
-    // Let's first check if the vote exists and belongs to the user.
+    // We must find the target_user_id to delete ALL history for this pair.
     const { data: vote, error: fetchError } = await supabase
       .from('votes')
-      .select('voter_id')
+      .select('voter_id, target_user_id')
       .eq('id', id)
       .single();
 
@@ -38,10 +37,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Bạn không có quyền xóa phiếu bầu này' }, { status: 403 });
     }
 
+    // Delete ALL history of this voter to this target, so older votes don't surface
     const { error: deleteError } = await supabase
       .from('votes')
       .delete()
-      .eq('id', id);
+      .eq('voter_id', session.id)
+      .eq('target_user_id', vote.target_user_id);
 
     if (deleteError) {
       throw deleteError;

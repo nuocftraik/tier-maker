@@ -3,7 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar } from '@/components/ui/Avatar/Avatar';
 import { Badge } from '@/components/ui/Badge/Badge';
-import { Crown } from 'lucide-react';
+import { Crown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import styles from './LeaderboardTable.module.css';
 
 interface LeaderboardTableProps {
@@ -27,6 +27,32 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
       </div>
     );
   }
+
+  const renderRankChange = (change: number | 'new' | null) => {
+    if (change === null) return null;
+    if (change === 'new') {
+      return <span className={styles.rankNew}>NEW</span>;
+    }
+    if (change > 0) {
+      return (
+        <span className={`${styles.rankChange} ${styles.rankUp}`}>
+          <TrendingUp size={16} /> {change}
+        </span>
+      );
+    }
+    if (change < 0) {
+      return (
+        <span className={`${styles.rankChange} ${styles.rankDown}`}>
+          <TrendingDown size={16} /> {Math.abs(change)}
+        </span>
+      );
+    }
+    return (
+      <span className={`${styles.rankChange} ${styles.rankNeutral}`}>
+        <Minus size={16} />
+      </span>
+    );
+  };
 
   return (
     <div className={styles.tableWrapper}>
@@ -58,7 +84,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 className={`${styles.row} ${isSTier && sTierSettings.tier_s_sparkle_effect ? styles.sparkleRow : ''}`}
               >
                 <div className={styles.colRank}>
-                  {isUnranked ? '-' : player.rank}
+                  <div className={styles.rankNumber}>
+                    {isUnranked ? '-' : player.rank}
+                  </div>
+                  {renderRankChange(player.rank_change)}
                 </div>
                 
                 <Link href={`/profile/${player.user_id || player.id}`} className={styles.colPlayer} style={{ textDecoration: 'none' }}>

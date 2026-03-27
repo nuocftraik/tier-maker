@@ -33,13 +33,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Không thể tự vote cho chính mình!' }, { status: 400 });
     }
 
-    // Upsert vote
+    // Insert new vote (keeping history)
     const { data, error } = await supabase
       .from('votes')
-      .upsert(
-        { voter_id: session.id, target_user_id: target_user_id, score: numScore, updated_at: new Date().toISOString() },
-        { onConflict: 'voter_id,target_user_id' }
-      )
+      .insert({ 
+        voter_id: session.id, 
+        target_user_id: target_user_id, 
+        score: numScore, 
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .select()
       .single();
 

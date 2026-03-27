@@ -70,12 +70,60 @@
 }
 
 .colRank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
   font-family: var(--font-heading);
   font-weight: 900;
   color: var(--text-muted);
   font-size: 1.25rem;
   font-style: italic;
   opacity: 0.5;
+}
+
+.rankNumber {
+  line-height: 1;
+}
+
+.rankChange {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  font-style: normal;
+  padding: 4px 6px;
+  border-radius: 6px;
+  opacity: 1;
+}
+
+.rankUp {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.rankDown {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.rankNeutral {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+.rankNew {
+  font-size: 0.6rem;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  font-style: normal;
+  opacity: 1;
 }
 
 .colPlayer {

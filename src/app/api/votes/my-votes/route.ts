@@ -18,7 +18,7 @@ export async function GET() {
     }
 
     const { data: myVotes, error } = await supabase
-      .from('votes')
+      .from('latest_votes')
       .select('*')
       .eq('voter_id', session.id);
 

@@ -21,9 +21,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // Fetch detailed vote history received by this user
-    // We want to know WHO voted for them
+    // We want to know WHO voted for them (latest only)
     const { data: votesData, error: votesError } = await supabase
-      .from('votes')
+      .from('latest_votes')
       .select(`
         id,
         score,

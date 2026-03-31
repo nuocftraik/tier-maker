@@ -3,6 +3,89 @@ import { supabase } from '@/lib/supabase';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/auth';
 
+async function recalculateSessionParticipants(sessionId: string) {
+  // 1. Fetch current session data
+  const { data: session } = await supabase.from('cost_sessions').select('*').eq('id', sessionId).single();
+  if (!session) return;
+
+  const totalCourt = session.total_court_fee || 0;
+  const totalShuttle = session.total_shuttle_fee || 0;
+  const totalDrink = session.total_drink_fee || 0;
+  const totalExpenses = totalCourt + totalShuttle + totalDrink;
+
+  // 2. Fetch all participants
+  const { data: participants } = await supabase.from('cost_participants').select('*').eq('session_id', sessionId);
+  if (!participants) return;
+
+  // People actually involved in the split (those with existing base_amount or designated)
+  // Usually, if base_amount = 0 and vote_status is NO, they were never in the split.
+  // We'll rely on base_amount > 0 or explicit designation set in start_split.
+  const splittingParts = participants.filter(p => p.base_amount > 0 || p.vote_status === 'yes' || (p.adjustment !== 0 && p.adjustment_note !== 'Ứng trước' ));
+  if (splittingParts.length === 0) return;
+
+  // 3. Sum total penalties (adjustments > 0)
+  // We treat positive adjustments as "Fines" that reduce the total bill for everyone.
+  // Negative adjustments (adjustments < 0) are "Advances" that only reduce individual debt.
+  let totalPenalty = 0;
+  splittingParts.forEach(p => {
+    // Note: We only count confirmed penalties. 
+    // Advance payments (adjustment < 0) are handled separately later.
+    if (p.adjustment > 0) totalPenalty += p.adjustment;
+  });
+
+  // Rules implementation:
+  // - Absentees pay only Court fee (total court / total splitters)
+  // - Fines (Penalties > 0) reduce the Group's expenses (Shuttle/Drink first, then Court)
+
+  let totalFines = 0;
+  splittingParts.forEach(p => {
+    if (p.adjustment > 0) totalFines += p.adjustment;
+  });
+
+  // NEW LOGIC: isAttendee = (vote_status === 'yes') AND (is_absent === false)
+  const attendees = splittingParts.filter(p => p.vote_status === 'yes' && !p.is_absent);
+  const absentees = splittingParts.filter(p => p.vote_status !== 'yes' || p.is_absent);
+
+  if (splittingParts.length === 0) return;
+
+  // Structured Reduction
+  let expenseShuttleDrink = totalShuttle + totalDrink;
+  let expenseCourt = totalCourt;
+
+  // 1. Fines reduce Shuttle/Drink first
+  let remainingFineToApply = totalFines;
+  let netShuttleDrink = Math.max(0, expenseShuttleDrink - remainingFineToApply);
+  remainingFineToApply = Math.max(0, remainingFineToApply - expenseShuttleDrink);
+
+  // 2. Remaining Fines reduce Court fee
+  let netCourtTotal = Math.max(0, expenseCourt - remainingFineToApply);
+
+  // 3. Calculate shares (Division by zero check for splittingParts.length > 0 done above)
+  const courtSharePerPerson = Math.ceil(netCourtTotal / splittingParts.length);
+  const shuttleDrinkSharePerAttendee = attendees.length > 0 ? Math.ceil(netShuttleDrink / attendees.length) : 0;
+
+  // 4. Update each participant
+  for (const p of splittingParts) {
+    const isActuallyAttending = p.vote_status === 'yes' && !p.is_absent;
+    const court = courtSharePerPerson;
+    const shuttle = isActuallyAttending ? shuttleDrinkSharePerAttendee : 0;
+    const base = court + shuttle;
+    
+    // Final amount = new base_amount + existing adjustment
+    const finalAmt = base + (p.adjustment || 0);
+
+    await supabase
+      .from('cost_participants')
+      .update({
+        court_amount: court,
+        shuttle_amount: shuttle,
+        base_amount: base,
+        final_amount: finalAmt
+      })
+      .eq('id', p.id);
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -221,7 +304,6 @@ export async function PUT(
         const advList = Array.isArray(advance_payers) ? advance_payers : [];
         for (const p of allParts) {
           const isPaying = splitIds.includes(p.user_id);
-          const base = isPaying ? basePerPerson : 0;
           
           let adj = 0;
           let note: string | null = null;
@@ -234,12 +316,11 @@ export async function PUT(
             note = note ? `${note}, ${singleNote}` : singleNote;
           }
 
-          const finalAmt = base + adj;
           const updateObj: any = {
-            base_amount: base,
+            base_amount: isPaying ? 1 : 0, // Temp value to mark as splitting
             adjustment: adj,
             adjustment_note: note,
-            final_amount: finalAmt
+            final_amount: 0 // Will be recalculated
           };
 
           // Mặc định những người không vote thì tính là không đi
@@ -250,6 +331,9 @@ export async function PUT(
           await supabase.from('cost_participants').update(updateObj).eq('id', p.id);
         }
       }
+
+      // 3. Final Recalculation using the new logic
+      await recalculateSessionParticipants(id);
 
       return NextResponse.json({ message: 'Đã chốt sổ và bắt đầu chia tiền' });
     }
@@ -275,10 +359,10 @@ export async function PUT(
 
     // Action: adjust
     if (action === 'adjust') {
-      const { participant_id, adjustment, adjustment_note } = body;
+      const { participant_id, adjustment, adjustment_note, is_absent } = body;
       const { data: participant } = await supabase
         .from('cost_participants')
-        .select('base_amount')
+        .select('id')
         .eq('id', participant_id)
         .eq('session_id', id)
         .single();
@@ -288,19 +372,24 @@ export async function PUT(
       }
 
       const adjustmentAmount = parseInt(adjustment) || 0;
-      const finalAmount = participant.base_amount + adjustmentAmount;
+      
+      const updateData: any = {
+        adjustment: adjustmentAmount,
+        adjustment_note: adjustment_note || null,
+        is_absent: !!is_absent
+      };
 
       const { error } = await supabase
         .from('cost_participants')
-        .update({
-          adjustment: adjustmentAmount,
-          adjustment_note: adjustment_note || null,
-          final_amount: finalAmount
-        })
+        .update(updateData)
         .eq('id', participant_id)
         .eq('session_id', id);
 
       if (error) throw error;
+
+      // Recalculate everyone's share
+      await recalculateSessionParticipants(id);
+
       return NextResponse.json({ message: 'Cập nhật điều chỉnh thành công' });
     }
 

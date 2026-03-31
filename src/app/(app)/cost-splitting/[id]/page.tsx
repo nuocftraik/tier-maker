@@ -46,6 +46,7 @@ export default function CostSessionDetailPage() {
   const [adjustModal, setAdjustModal] = useState<any>(null);
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustNote, setAdjustNote] = useState('');
+  const [adjustIsAbsent, setAdjustIsAbsent] = useState(false);
   
   // Start Split Form (Inline Step)
   const [startSplitOpen, setStartSplitOpen] = useState(false);
@@ -251,7 +252,8 @@ export default function CostSessionDetailPage() {
         action: 'adjust',
         participant_id: adjustModal.id,
         adjustment: parseInt(adjustAmount) || 0,
-        adjustment_note: adjustNote
+        adjustment_note: adjustNote,
+        is_absent: adjustIsAbsent
       })
     });
     setAdjustModal(null);
@@ -337,6 +339,7 @@ export default function CostSessionDetailPage() {
     setAdjustModal(p);
     setAdjustAmount(String(p.adjustment || 0));
     setAdjustNote(p.adjustment_note || '');
+    setAdjustIsAbsent(!!p.is_absent);
   };
 
   if (loading) {
@@ -722,6 +725,38 @@ export default function CostSessionDetailPage() {
         </div>
       )}
 
+      {/* CALCULATION PRINCIPLES */}
+      {!isVoting && !startSplitOpen && (
+        <div className={styles.section} style={{ background: 'rgba(59, 130, 246, 0.03)', borderStyle: 'dashed', padding: '1rem' }}>
+          <div className={styles.sectionHeader} style={{ fontSize: '0.9rem', color: '#3b82f6', borderBottomStyle: 'dashed', paddingBottom: '0.5rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Calculator size={16} className={styles.sectionIcon} /> 
+              Nguyên tắc chia tiền (Cách tính)
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <XCircle size={12} color="#94a3b8" /> Thành viên Không đi
+              </div>
+              Những người này chỉ tính <span style={{ color: '#3b82f6', fontWeight: 600 }}>Tiền sân</span> (nếu có tên trong danh sách nộp). Miễn tiền Cầu & Nước.
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <AlertTriangle size={12} color="#eab308" /> Tiền phạt (Penalty)
+              </div>
+              Được <span style={{ color: '#10b981', fontWeight: 600 }}>giảm trừ trực tiếp</span> vào tổng hóa đơn chung trước khi chia.
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <CheckCircle2 size={12} color="#10b981" /> Thành viên Có đi
+              </div>
+              Đóng tiền sân + Chia đều phần bill còn lại sau khi đã trừ phạt & phí người không đi.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FINAL BREAKDOWN (Only if splitting or closed, AND not editing) */}
       {!isVoting && !startSplitOpen && (
         <div className={styles.section}>
@@ -785,9 +820,19 @@ export default function CostSessionDetailPage() {
             </div>
 
             <table className={styles.participantTable}>
+              <thead>
+                <tr style={{ fontSize: '0.7rem', color: '#94a3b8', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                  <th style={{ padding: '0.5rem' }}>THÀNH VIÊN</th>
+                  <th style={{ padding: '0.5rem', textAlign: 'right' }}>SÂN</th>
+                  <th style={{ padding: '0.5rem', textAlign: 'right' }}>CẦU/NƯỚC</th>
+                  <th style={{ padding: '0.5rem', textAlign: 'right' }}>PHẠT/CỘNG</th>
+                  <th style={{ padding: '0.5rem', textAlign: 'right' }}>TỔNG</th>
+                  <th style={{ padding: '0.5rem' }}></th>
+                </tr>
+              </thead>
               <tbody>
                 {activeSplittingParts.length === 0 && (
-                  <tr><td colSpan={4} style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>Trống</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>Trống</td></tr>
                 )}
                 {activeSplittingParts.map((p: any) => {
                   const voteConfig = VOTE_STATUS_CONFIG[p.vote_status] || VOTE_STATUS_CONFIG.pending;
@@ -796,49 +841,78 @@ export default function CostSessionDetailPage() {
                     <tr key={p.id} className={styles.participantRow}>
                       <td>
                         <div className={styles.participantUser}>
-                          {p.user?.avatar_url && (
-                            <img src={getAvatarUrl(p.user.avatar_url)} alt={p.user?.name} className={styles.avatar} />
+                          {(p.user?.avatar_url || true) && (
+                            <img src={getAvatarUrl(p.user?.avatar_url)} alt={p.user?.name} className={styles.avatar} style={{ width: '24px', height: '24px' }} />
                           )}
                           <div>
-                            <span className={styles.userName}>{p.user?.name || 'N/A'}</span>
-                            <div className={styles.voteStatusInline} style={{ color: voteConfig.color }}>
-                              <VoteIcon size={11} /> {voteConfig.label}
+                            <span className={styles.userName} style={{ fontSize: '0.85rem' }}>{p.user?.name || 'N/A'}</span>
+                            <div className={styles.voteStatusInline} style={{ color: voteConfig.color, fontSize: '0.65rem' }}>
+                              <VoteIcon size={10} /> {voteConfig.label}
+                              {p.is_absent && p.vote_status === 'yes' && (
+                                <span style={{ marginLeft: '0.3rem', color: '#94a3b8', fontStyle: 'italic' }}>(Vắng)</span>
+                              )}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className={styles.amountCell}>
-                        <div className={styles.baseAmount}>{formatVND(p.base_amount)}</div>
+                      <td className={styles.amountCell} style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        {formatVND(p.court_amount || 0)}
+                      </td>
+                      <td className={styles.amountCell} style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        {formatVND(p.shuttle_amount || 0)}
+                      </td>
+                      <td className={styles.amountCell} style={{ textAlign: 'right' }}>
                         {p.adjustment !== 0 && (
-                          <div className={p.adjustment > 0 ? styles.adjustmentPositive : styles.adjustmentNegative} title={p.adjustment_note || ''}>
-                            {p.adjustment > 0 ? '+' : ''}{formatVND(p.adjustment)}
+                          <div className={p.adjustment > 0 ? styles.adjustmentPositive : styles.adjustmentNegative} style={{ display: 'inline-block' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>
+                              {p.adjustment > 0 ? '+' : ''}{formatVND(p.adjustment)}
+                            </div>
+                            {p.adjustment_note && (
+                              <div style={{ fontSize: '0.65rem', fontStyle: 'italic', opacity: 0.8, maxWidth: '80px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {p.adjustment_note}
+                              </div>
+                            )}
                           </div>
                         )}
+                        {p.adjustment === 0 && <span style={{ color: '#64748b', fontSize: '0.75rem' }}>-</span>}
                       </td>
-                      <td className={styles.amountCell}>
-                        <div className={styles.finalAmount} style={p.final_amount < 0 ? { color: '#ef4444' } : {}}>{formatVND(p.final_amount)}</div>
+                      <td className={styles.amountCell} style={{ textAlign: 'right' }}>
+                        <div className={styles.finalAmount} style={{ 
+                          fontSize: '0.9rem', 
+                          fontWeight: 700, 
+                          color: p.final_amount < 0 ? '#ef4444' : 'var(--text-primary)' 
+                        }}>
+                          {formatVND(p.final_amount)}
+                        </div>
                       </td>
-                      <td>
-                        {canManage && (
-                          <div className={styles.rowActions}>
-                            <button className={styles.adjustBtn} onClick={() => openAdjustModal(p)} title="Cộng/trừ phạt">
-                              <PenLine size={11} /> ± Phạt
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem' }}>
+                          {canManage && (
+                            <button className={styles.adjustBtn} onClick={() => openAdjustModal(p)} title="Sửa phạt/phụ thu" style={{ padding: '0.4rem' }}>
+                              <Edit size={12} />
                             </button>
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          className={`${styles.paidBadge} ${p.is_paid ? styles.paid : styles.unpaid}`}
-                          onClick={() => isSplitting && canManage && handleTogglePaid(p)}
-                          disabled={!isSplitting || !canManage}
-                        >
-                          {p.is_paid ? (
-                            <><CheckCircle2 size={13} /> Đã trả</>
-                          ) : (
-                            <><XCircle size={13} /> Chưa trả</>
                           )}
-                        </button>
+                          <button
+                            className={`${styles.paidBadge} ${p.is_paid ? styles.paid : styles.unpaid}`}
+                            onClick={() => isSplitting && canManage && handleTogglePaid(p)}
+                            disabled={!isSplitting || !canManage}
+                            style={{ 
+                              padding: '0.3rem 0.5rem', 
+                              fontSize: '0.65rem', 
+                              borderRadius: '0.3rem',
+                              border: 'none',
+                              cursor: (isSplitting && canManage) ? 'pointer' : 'default',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.2rem',
+                              minWidth: '60px',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            {p.is_paid ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
+                            {p.is_paid ? 'Xong' : 'Chưa'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -885,16 +959,20 @@ export default function CostSessionDetailPage() {
                       onClick={() => {
                         setAdjustAmount(String(r.penalty_amount));
                         setAdjustNote(r.rule_text);
+                        // Auto-check "Only Court Fee" if the rule mentions absence
+                        if (r.rule_text.toLowerCase().includes('không đến') || r.rule_text.toLowerCase().includes('hủy kèo')) {
+                          setAdjustIsAbsent(true);
+                        }
                       }}
                       style={{
-                        background: 'rgba(59, 130, 246, 0.1)',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        background: adjustNote === r.rule_text ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
+                        border: adjustNote === r.rule_text ? '1px solid #3b82f6' : '1px solid rgba(59, 130, 246, 0.3)',
                         borderRadius: '0.3rem',
-                        padding: '0.3rem 0.6rem',
+                        padding: '0.4rem 0.75rem',
                         color: '#3b82f6',
                         fontSize: '0.75rem',
                         cursor: 'pointer',
-                        whiteSpace: 'nowrap'
+                        textAlign: 'left'
                       }}
                     >
                       {r.rule_text} ({formatVND(r.penalty_amount)})
@@ -904,19 +982,36 @@ export default function CostSessionDetailPage() {
               </div>
             )}
 
+            <div className={styles.modalField} style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.2rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
+                <input 
+                  type="checkbox" 
+                  checked={adjustIsAbsent} 
+                  onChange={e => setAdjustIsAbsent(e.target.checked)}
+                  style={{ width: '18px', height: '18px' }}
+                />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Chế độ: Chỉ tính TIỀN SÂN</div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                    Sử dụng khi thành viên đã Vote Đi nhưng thực tế không tham gia (Miễn tiền cầu & nước).
+                  </div>
+                </div>
+              </label>
+            </div>
+
             <div className={styles.modalField}>
               <label className={styles.modalLabel}>Số tiền cộng/trừ (VND)</label>
               <input type="number" className={styles.modalInput} value={adjustAmount}
                 onChange={e => setAdjustAmount(e.target.value)} placeholder="VD: +20000 hoặc -10000" />
             </div>
             <div className={styles.modalField}>
-              <label className={styles.modalLabel}>Lý do</label>
+              <label className={styles.modalLabel}>Ghi chú phạt / phụ thu</label>
               <textarea className={styles.modalTextarea} value={adjustNote}
                 onChange={e => setAdjustNote(e.target.value)} placeholder="VD: Đến muộn 30 phút, phạt 20,000đ" />
             </div>
             <div className={styles.modalActions}>
               <button className={`${styles.modalBtn} ${styles.modalBtnCancel}`} onClick={() => setAdjustModal(null)}>Hủy</button>
-              <button className={`${styles.modalBtn} ${styles.modalBtnPrimary}`} onClick={handleAdjust}>Cập Nhật Toán</button>
+              <button className={`${styles.modalBtn} ${styles.modalBtnPrimary}`} onClick={handleAdjust}>Lưu Thay Đổi</button>
             </div>
           </div>
         </div>

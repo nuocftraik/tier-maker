@@ -129,12 +129,30 @@ export async function PUT(
     const { action } = body;
 
     // Actions that require owner/admin
-    const ownerActions = ['start_split', 'adjust', 'close', 'reopen', 'update_note', 'upload_qr', 'lock_poll', 'reopen_poll'];
+    const ownerActions = ['start_split', 'adjust', 'close', 'reopen', 'update_note', 'upload_qr', 'lock_poll', 'reopen_poll', 'update_session'];
     if (ownerActions.includes(action)) {
       const check = await verifyOwnerOrAdmin(id, userSession);
       if (!check.allowed) {
         return NextResponse.json({ error: check.error }, { status: check.status });
       }
+    }
+
+    // Action: update_session - update title and date
+    if (action === 'update_session') {
+      const { title, session_date } = body;
+      if (!title || !title.trim()) {
+        return NextResponse.json({ error: 'Tiêu đề không được để trống' }, { status: 400 });
+      }
+      const { error } = await supabase
+        .from('cost_sessions')
+        .update({ 
+          title: title.trim(),
+          session_date: session_date || new Date().toISOString()
+        })
+        .eq('id', id);
+      
+      if (error) throw error;
+      return NextResponse.json({ message: 'Đã cập nhật thông tin phiên' });
     }
 
     // Action: vote - member votes yes/no for attendance

@@ -64,6 +64,10 @@ export default function CostSessionDetailPage() {
   }
   const [advancePayers, setAdvancePayers] = useState<AdvancePayer[]>([]);
 
+  const [editSessionOpen, setEditSessionOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDate, setEditDate] = useState('');
+
   const [recentQRs, setRecentQRs] = useState<string[]>([]);
 
   // Accordion state to toggle visibility of read-only parts
@@ -131,16 +135,60 @@ export default function CostSessionDetailPage() {
     const currentMyStatus = participants.find(p => p.user_id === currentUserId)?.vote_status || 'pending';
     const targetStatus = newStatus === currentMyStatus ? 'pending' : newStatus;
 
+    // Optimistic Update
     setParticipants(prev => prev.map(p => 
       p.user_id === currentUserId ? { ...p, vote_status: targetStatus } : p
     ));
 
+    try {
+      const res = await fetch(`/api/cost-sessions/${sessionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'vote', vote_status: targetStatus })
+      });
+      if (!res.ok) {
+        // Rollback on error
+        fetchData();
+        return;
+      }
+      
+      // If was successful, just update the local session state totals if needed, 
+      // but usually the numbers are calculated from participants array. 
+      // Instead of fetchData(), we can just update local states.
+      // But fetchData() is safest for consistency, just don't wait for it to be visible.
+      // Removed fetchData() here if we want maximum speed. 
+      // Let's keep it but just don't expect it to change things immediately.
+      // fetchData(); 
+    } catch {
+      fetchData();
+    }
+  };
+
+  const handleUpdateSessionInfo = async () => {
+    if (!editTitle.trim()) return;
+    setLoading(true);
     await fetch(`/api/cost-sessions/${sessionId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'vote', vote_status: targetStatus })
+      body: JSON.stringify({ 
+        action: 'update_session', 
+        title: editTitle, 
+        session_date: editDate 
+      })
     });
+    setEditSessionOpen(false);
     fetchData();
+  };
+
+  const openEditSessionModal = () => {
+    setEditTitle(session?.title || '');
+    // Format to YYYY-MM-DDTHH:MM for input type: datetime-local
+    if (session?.session_date) {
+      const d = new Date(session.session_date);
+      const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      setEditDate(iso);
+    }
+    setEditSessionOpen(true);
   };
 
   const openStartSplitStep = () => {
@@ -340,6 +388,15 @@ export default function CostSessionDetailPage() {
           <span className={`${styles.statusBadge} ${styles[session.status]}`}>
             {isVoting ? '• Đang Vote' : (isSplitting ? '• Chia tiền' : '• Đã đóng')}
           </span>
+          {canManage && (
+            <button 
+              onClick={openEditSessionModal}
+              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0.25rem' }}
+              title="Sửa tên/ngày"
+            >
+              <Edit size={16} />
+            </button>
+          )}
         </h1>
         <div className={styles.detailMeta}>
           <span className={styles.metaItem}>
@@ -860,6 +917,36 @@ export default function CostSessionDetailPage() {
             <div className={styles.modalActions}>
               <button className={`${styles.modalBtn} ${styles.modalBtnCancel}`} onClick={() => setAdjustModal(null)}>Hủy</button>
               <button className={`${styles.modalBtn} ${styles.modalBtnPrimary}`} onClick={handleAdjust}>Cập Nhật Toán</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Session Detail Modal */}
+      {editSessionOpen && (
+        <div className={styles.modalOverlay} onClick={() => setEditSessionOpen(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalTitle}>Sửa thông tin phiên</div>
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>Tên phiên / Ghi chú buổi</label>
+              <input 
+                className={styles.modalInput} 
+                value={editTitle} 
+                onChange={e => setEditTitle(e.target.value)} 
+                placeholder="Buổi cầu T3 30/3..."
+              />
+            </div>
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>Ngày giờ chơi</label>
+              <input 
+                type="datetime-local" 
+                className={styles.modalInput} 
+                value={editDate} 
+                onChange={e => setEditDate(e.target.value)} 
+              />
+            </div>
+            <div className={styles.modalActions}>
+              <button className={`${styles.modalBtn} ${styles.modalBtnCancel}`} onClick={() => setEditSessionOpen(false)}>Hủy</button>
+              <button className={`${styles.modalBtn} ${styles.modalBtnPrimary}`} onClick={handleUpdateSessionInfo}>Cập nhật</button>
             </div>
           </div>
         </div>

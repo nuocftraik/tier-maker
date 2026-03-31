@@ -46,7 +46,7 @@ export default function CostSessionDetailPage() {
   const [adjustModal, setAdjustModal] = useState<any>(null);
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustNote, setAdjustNote] = useState('');
-  const [adjustIsAbsent, setAdjustIsAbsent] = useState(false);
+  const [adjustAttendanceOverride, setAdjustAttendanceOverride] = useState('follow_vote');
   
   // Start Split Form (Inline Step)
   const [startSplitOpen, setStartSplitOpen] = useState(false);
@@ -231,16 +231,29 @@ export default function CostSessionDetailPage() {
   };
 
   const handleTogglePaid = async (participant: any) => {
-    await fetch(`/api/cost-sessions/${sessionId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'toggle_paid',
-        participant_id: participant.id,
-        is_paid: !participant.is_paid
-      })
-    });
-    fetchData();
+    const targetStatus = !participant.is_paid;
+
+    // Optimistic Update
+    setParticipants(prev => prev.map(p => 
+      p.id === participant.id ? { ...p, is_paid: targetStatus } : p
+    ));
+
+    try {
+      const res = await fetch(`/api/cost-sessions/${sessionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'toggle_paid',
+          participant_id: participant.id,
+          is_paid: targetStatus
+        })
+      });
+      if (!res.ok) {
+        fetchData();
+      }
+    } catch {
+      fetchData();
+    }
   };
 
   const handleAdjust = async () => {
@@ -253,7 +266,7 @@ export default function CostSessionDetailPage() {
         participant_id: adjustModal.id,
         adjustment: parseInt(adjustAmount) || 0,
         adjustment_note: adjustNote,
-        is_absent: adjustIsAbsent
+        attendance_override: adjustAttendanceOverride
       })
     });
     setAdjustModal(null);
@@ -339,7 +352,7 @@ export default function CostSessionDetailPage() {
     setAdjustModal(p);
     setAdjustAmount(String(p.adjustment || 0));
     setAdjustNote(p.adjustment_note || '');
-    setAdjustIsAbsent(!!p.is_absent);
+    setAdjustAttendanceOverride(p.attendance_override || 'follow_vote');
   };
 
   if (loading) {
@@ -848,8 +861,11 @@ export default function CostSessionDetailPage() {
                             <span className={styles.userName} style={{ fontSize: '0.85rem' }}>{p.user?.name || 'N/A'}</span>
                             <div className={styles.voteStatusInline} style={{ color: voteConfig.color, fontSize: '0.65rem' }}>
                               <VoteIcon size={10} /> {voteConfig.label}
-                              {p.is_absent && p.vote_status === 'yes' && (
+                              {p.attendance_override === 'force_absent' && p.vote_status === 'yes' && (
                                 <span style={{ marginLeft: '0.3rem', color: '#94a3b8', fontStyle: 'italic' }}>(Vắng)</span>
+                              )}
+                              {p.attendance_override === 'force_present' && p.vote_status !== 'yes' && (
+                                <span style={{ marginLeft: '0.3rem', color: '#10b981', fontStyle: 'italic' }}>(Có đi)</span>
                               )}
                             </div>
                           </div>
@@ -959,9 +975,11 @@ export default function CostSessionDetailPage() {
                       onClick={() => {
                         setAdjustAmount(String(r.penalty_amount));
                         setAdjustNote(r.rule_text);
-                        // Auto-check "Only Court Fee" if the rule mentions absence
+                        // Auto-set the correct override if the rule mentions absence or presence
                         if (r.rule_text.toLowerCase().includes('không đến') || r.rule_text.toLowerCase().includes('hủy kèo')) {
-                          setAdjustIsAbsent(true);
+                          setAdjustAttendanceOverride('force_absent');
+                        } else if (r.rule_text.toLowerCase().includes('nhưng đến sân')) {
+                          setAdjustAttendanceOverride('force_present');
                         }
                       }}
                       style={{
@@ -982,21 +1000,48 @@ export default function CostSessionDetailPage() {
               </div>
             )}
 
-            <div className={styles.modalField} style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.2rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
-                <input 
-                  type="checkbox" 
-                  checked={adjustIsAbsent} 
-                  onChange={e => setAdjustIsAbsent(e.target.checked)}
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Chế độ: Chỉ tính TIỀN SÂN</div>
-                  <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-                    Sử dụng khi thành viên đã Vote Đi nhưng thực tế không tham gia (Miễn tiền cầu & nước).
-                  </div>
-                </div>
-              </label>
+            <div className={styles.modalField} style={{ background: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.2rem', border: '1px solid var(--border-color)' }}>
+              <label className={styles.modalLabel} style={{ marginBottom: '0.5rem' }}>Xác nhận đi thực tế (Không đổi Vote)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.4rem' }}>
+                <button 
+                  onClick={() => setAdjustAttendanceOverride('follow_vote')}
+                  style={{ 
+                    padding: '0.4rem', fontSize: '0.75rem', borderRadius: '0.3rem', border: '1px solid var(--border-color)',
+                    background: adjustAttendanceOverride === 'follow_vote' ? 'rgba(148, 163, 184, 0.1)' : 'transparent',
+                    color: adjustAttendanceOverride === 'follow_vote' ? 'var(--text-primary)' : '#94a3b8',
+                    fontWeight: adjustAttendanceOverride === 'follow_vote' ? 700 : 400, cursor: 'pointer'
+                  }}
+                >
+                  Theo Vote
+                </button>
+                <button 
+                  onClick={() => setAdjustAttendanceOverride('force_absent')}
+                  style={{ 
+                    padding: '0.4rem', fontSize: '0.75rem', borderRadius: '0.3rem', border: '1px solid var(--border-color)',
+                    background: adjustAttendanceOverride === 'force_absent' ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+                    color: adjustAttendanceOverride === 'force_absent' ? '#ef4444' : '#94a3b8',
+                    fontWeight: adjustAttendanceOverride === 'force_absent' ? 700 : 400, cursor: 'pointer'
+                  }}
+                >
+                  Vắng (Sân)
+                </button>
+                <button 
+                  onClick={() => setAdjustAttendanceOverride('force_present')}
+                  style={{ 
+                    padding: '0.4rem', fontSize: '0.75rem', borderRadius: '0.3rem', border: '1px solid var(--border-color)',
+                    background: adjustAttendanceOverride === 'force_present' ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                    color: adjustAttendanceOverride === 'force_present' ? '#10b981' : '#94a3b8',
+                    fontWeight: adjustAttendanceOverride === 'force_present' ? 700 : 400, cursor: 'pointer'
+                  }}
+                >
+                  Có đi (Full)
+                </button>
+              </div>
+              <p style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '0.6rem', fontStyle: 'italic' }}>
+                {adjustAttendanceOverride === 'follow_vote' && '💡 Tính tiền dựa trên nút Đi/Nghỉ họ đã chọn.'}
+                {adjustAttendanceOverride === 'force_absent' && '💡 Chỉ tính tiền sân (Miễn cầu/nước), không đổi màu vote.'}
+                {adjustAttendanceOverride === 'force_present' && '💡 Tính đủ tiền sân + cầu + nước, không đổi màu vote.'}
+              </p>
             </div>
 
             <div className={styles.modalField}>

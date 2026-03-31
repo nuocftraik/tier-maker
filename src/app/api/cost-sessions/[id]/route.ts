@@ -42,9 +42,15 @@ async function recalculateSessionParticipants(sessionId: string) {
     if (p.adjustment > 0) totalFines += p.adjustment;
   });
 
-  // NEW LOGIC: isAttendee = (vote_status === 'yes') AND (is_absent === false)
-  const attendees = splittingParts.filter(p => p.vote_status === 'yes' && !p.is_absent);
-  const absentees = splittingParts.filter(p => p.vote_status !== 'yes' || p.is_absent);
+  // NEW LOGIC: Determine who pays shuttle fee based on override + vote
+  const getIsAttendee = (p: any) => {
+    if (p.attendance_override === 'force_present') return true;
+    if (p.attendance_override === 'force_absent') return false;
+    return p.vote_status === 'yes';
+  };
+
+  const attendees = splittingParts.filter(p => getIsAttendee(p));
+  const absentees = splittingParts.filter(p => !getIsAttendee(p));
 
   if (splittingParts.length === 0) return;
 
@@ -66,7 +72,7 @@ async function recalculateSessionParticipants(sessionId: string) {
 
   // 4. Update each participant
   for (const p of splittingParts) {
-    const isActuallyAttending = p.vote_status === 'yes' && !p.is_absent;
+    const isActuallyAttending = getIsAttendee(p);
     const court = courtSharePerPerson;
     const shuttle = isActuallyAttending ? shuttleDrinkSharePerAttendee : 0;
     const base = court + shuttle;
@@ -115,7 +121,8 @@ export async function GET(
         user:users!user_id(id, name, avatar_url)
       `)
       .eq('session_id', id)
-      .order('final_amount', { ascending: false });
+      .order('final_amount', { ascending: false })
+      .order('id', { ascending: true });
 
     // Fetch GLOBAL rules
     const { data: rules } = await supabase
@@ -359,7 +366,7 @@ export async function PUT(
 
     // Action: adjust
     if (action === 'adjust') {
-      const { participant_id, adjustment, adjustment_note, is_absent } = body;
+      const { participant_id, adjustment, adjustment_note, attendance_override } = body;
       const { data: participant } = await supabase
         .from('cost_participants')
         .select('id')
@@ -376,7 +383,7 @@ export async function PUT(
       const updateData: any = {
         adjustment: adjustmentAmount,
         adjustment_note: adjustment_note || null,
-        is_absent: !!is_absent
+        attendance_override: attendance_override || 'follow_vote'
       };
 
       const { error } = await supabase
